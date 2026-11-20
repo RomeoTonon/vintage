@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1d4a9e">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Учёт винтажа">
+<title>Учёт винтажа</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Prata&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Layout: left rail with sections, work area on the right; summary first, tables below.
+     Palette: cobalt "Delft" accent on cool porcelain neutrals. */
+  --bg:#f2f4f7; --surface:#ffffff; --ink:#131a26; --muted:#596273; --line:#dce1e9; --accent:#1d4a9e; --accent-soft:#e8eef9; --on-accent:#ffffff;
+  --font-display:"Prata", Georgia, "Times New Roman", serif;
+  --font-body:"Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --good:#0b6b35; --good-bg:#e2f3e8; --warn:#875700; --warn-bg:#fcf0d6; --bad:#b02e2e; --bad-bg:#fbe5e3; --info:#1d4a9e; --info-bg:#e8eef9; --neutral:#4b5363; --neutral-bg:#eceef2;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --grid:#e3e6ec; --axis:#c3c8d2;
+  --shadow:0 1px 2px rgba(19,26,38,.06), 0 0 0 1px rgba(19,26,38,.04);
+  --radius:10px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1219; --surface:#161c26; --ink:#e7ebf2; --muted:#9aa3b2; --line:#283141; --accent:#86a9f0; --accent-soft:#1b2740; --on-accent:#0e1219;
+    --good:#66d091; --good-bg:#11301f; --warn:#f2c56a; --warn-bg:#33280f; --bad:#f39088; --bad-bg:#3a1a17; --info:#86a9f0; --info-bg:#1b2740; --neutral:#b4bccb; --neutral-bg:#232b38;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --grid:#262e3b; --axis:#3a4352;
+    --shadow:0 0 0 1px rgba(255,255,255,.06);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1219; --surface:#161c26; --ink:#e7ebf2; --muted:#9aa3b2; --line:#283141; --accent:#86a9f0; --accent-soft:#1b2740; --on-accent:#0e1219;
+  --good:#66d091; --good-bg:#11301f; --warn:#f2c56a; --warn-bg:#33280f; --bad:#f39088; --bad-bg:#3a1a17; --info:#86a9f0; --info-bg:#1b2740; --neutral:#b4bccb; --neutral-bg:#232b38;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --grid:#262e3b; --axis:#3a4352;
+  --shadow:0 0 0 1px rgba(255,255,255,.06);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--accent)}
+h1,h2,h3{margin:0;text-wrap:balance}
+h1{font-family:var(--font-display);font-weight:400;font-size:28px;line-height:1.15;letter-spacing:.01em}
+h2{font-size:15px;font-weight:600}
+h3{font-size:15px;font-weight:600}
+.num,td.n,th.n{font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- shell ---------- */
+.app{display:grid;grid-template-columns:232px 1fr;min-height:100%}
+.rail{position:sticky;top:0;height:100vh;overflow:auto;background:var(--surface);border-right:1px solid var(--line);padding:22px 14px;display:flex;flex-direction:column;gap:20px}
+.brand{padding:0 8px}
+.brand .mark{font-family:var(--font-display);font-size:22px;line-height:1.1}
+.brand .sub{color:var(--muted);font-size:12px;margin-top:4px}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;border-radius:8px;color:var(--ink);text-decoration:none;font-weight:500}
+.nav a:hover{background:var(--neutral-bg)}
+.nav a[aria-current="page"]{background:var(--accent-soft);color:var(--accent)}
+.nav .ico,.nav .ls{display:none}
+.nav .lf{display:inline}
+.nav .cnt{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.nav .cnt.alert{color:var(--warn);background:var(--warn-bg);border-radius:20px;padding:1px 7px;font-weight:600}
+.rail-foot{margin-top:auto;padding:0 8px;color:var(--muted);font-size:12px;display:flex;flex-direction:column;gap:6px}
+.rail-foot b{color:var(--ink);font-weight:600}
+main{min-width:0;padding:26px clamp(16px,3vw,36px) 60px}
+.topbar{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.topbar .lead{color:var(--muted);margin-top:6px;max-width:65ch}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}
+  .rail{position:static;height:auto;flex-direction:column;gap:10px;padding:14px 16px;border-right:0;border-bottom:1px solid var(--line)}
+  .nav{flex-direction:row;overflow-x:auto;gap:4px}
+  .nav a{white-space:nowrap}
+  .rail-foot{flex-direction:row;flex-wrap:wrap;gap:12px;margin:0}
+  h1{font-size:24px}
+}
+
+/* ---------- controls ---------- */
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 12px;cursor:pointer;font-weight:500;white-space:nowrap}
+.btn:hover{border-color:var(--axis);background:var(--neutral-bg)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.sm{padding:4px 9px;font-size:13px}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.ghost:hover{background:var(--neutral-bg)}
+.btn.danger{color:var(--bad)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.toolbar .grow{flex:1 1 220px}
+input[type=text],input[type=number],input[type=date],input[type=search],select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 10px;min-width:0}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+textarea{resize:vertical;min-height:64px;width:100%}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:20px;padding:5px 11px;cursor:pointer;font-size:13px}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.readonly .w{display:none!important}
+
+/* ---------- cards & tiles ---------- */
+.card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 18px 16px}
+.card-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.card-h .hint{color:var(--muted);font-size:12.5px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px;margin-top:16px}
+.stack{display:flex;flex-direction:column;gap:16px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.tile{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.tile .lbl{color:var(--muted);font-size:12.5px}
+.tile .val{font-size:24px;font-weight:600;line-height:1.2;overflow-wrap:anywhere}
+.tile .sub{color:var(--muted);font-size:12px}
+.tile.hero .val{font-size:30px}
+.tile.attn{box-shadow:inset 3px 0 0 var(--warn),var(--shadow)}
+.tile.attn .val{color:var(--ink)}
+.pos{color:var(--good)} .neg{color:var(--bad)}
+
+/* ---------- pills ---------- */
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:20px;padding:2px 9px;font-size:12px;font-weight:500;white-space:nowrap;line-height:1.5}
+.pill-good{background:var(--good-bg);color:var(--good)}
+.pill-warn{background:var(--warn-bg);color:var(--warn)}
+.pill-bad{background:var(--bad-bg);color:var(--bad)}
+.pill-info{background:var(--info-bg);color:var(--info)}
+.pill-neutral{background:var(--neutral-bg);color:var(--neutral)}
+
+/* ---------- tables ---------- */
+.tablewrap{overflow-x:auto;background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow)}
+.card .tablewrap{box-shadow:none;border-radius:0;margin:0 -18px -16px}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;font-weight:600;color:var(--muted);background:var(--surface);position:sticky;top:0;white-space:nowrap}
+th.sort{cursor:pointer;user-select:none}
+th.sort:hover{color:var(--ink)}
+td.n,th.n{text-align:right;white-space:nowrap}
+tbody tr:hover{background:color-mix(in srgb,var(--accent-soft) 45%,transparent)}
+tr.clickable{cursor:pointer}
+tfoot td{font-weight:600;border-bottom:0;background:var(--neutral-bg)}
+.t-name{font-weight:500}
+.t-note{color:var(--muted);font-size:12px;margin-top:2px;max-width:46ch}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.row-actions{display:flex;gap:4px;justify-content:flex-end;flex-wrap:nowrap}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+
+/* ---------- boxes ---------- */
+.boxgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px}
+.boxcard{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;display:flex;flex-direction:column;gap:10px;cursor:pointer;text-align:left;border:0;width:100%}
+.boxcard:hover{box-shadow:0 0 0 1px var(--accent),var(--shadow)}
+.boxcard .top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.boxcard .meta{color:var(--muted);font-size:12.5px;display:flex;flex-wrap:wrap;gap:4px 12px}
+.boxcard .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.boxcard .stats div{display:flex;flex-direction:column;gap:1px;min-width:0}
+.boxcard .stats span{font-size:11.5px;color:var(--muted)}
+.boxcard .stats b{font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.meter{height:8px;border-radius:8px;background:var(--accent-soft);overflow:hidden;display:flex;gap:2px}
+.meter i{display:block;height:100%;background:var(--accent);border-radius:8px}
+.meter i.lost{background:var(--bad)}
+.meter-l{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:4px}
+.info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px 20px}
+.info-grid div span{display:block;font-size:12px;color:var(--muted)}
+.info-grid div b{font-weight:500;overflow-wrap:anywhere}
+.back{display:inline-flex;margin-bottom:10px;color:var(--muted);text-decoration:none;font-size:13px}
+.back:hover{color:var(--accent)}
+
+/* ---------- charts ---------- */
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.pb{display:grid;grid-template-columns:minmax(110px,190px) 1fr 52px;column-gap:12px;align-items:center}
+.pb .lab{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:5px 0}
+.pb .lab a{color:var(--ink);text-decoration:none}
+.pb .lab a:hover{color:var(--accent);text-decoration:underline}
+.pb .bars{display:flex;flex-direction:column;gap:2px;padding:4px 0;position:relative;background-image:var(--gridbg);cursor:default}
+.pb .bars i{display:block;height:8px;border-radius:0 4px 4px 0;min-width:1px}
+.pb .val{font-size:12px;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+.pb .axis{font-size:11px;color:var(--muted);position:relative;height:16px;border-top:1px solid var(--axis)}
+.pb .axis span{position:absolute;top:2px;transform:translateX(-50%);white-space:nowrap;font-variant-numeric:tabular-nums}
+.pb .axis span:first-child{transform:none}
+.pb .axis span:last-child{transform:translateX(-100%)}
+.seg{display:flex;gap:2px;height:28px;margin:6px 0 12px}
+.seg div{border-radius:4px;display:flex;align-items:center;padding:0 8px;color:#fff;font-size:12px;font-weight:600;min-width:2px;overflow:hidden;white-space:nowrap}
+.inbar{height:8px;border-radius:0 4px 4px 0;background:var(--s1);min-width:1px}
+.cols{display:flex;align-items:flex-end;gap:10px;height:180px;border-bottom:1px solid var(--axis);padding-top:20px;background-image:var(--gridbg-h)}
+.cols .c{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;position:relative;min-width:0}
+.cols .c i{display:block;width:min(24px,70%);background:var(--s1);border-radius:4px 4px 0 0;min-height:1px}
+.cols .c .cap{position:absolute;font-size:11.5px;font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
+.cols-l{display:flex;gap:10px;margin-top:6px}
+.cols-l span{flex:1;text-align:center;font-size:11.5px;color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#tip{position:fixed;z-index:60;pointer-events:none;background:var(--ink);color:var(--bg);padding:8px 10px;border-radius:8px;font-size:12.5px;line-height:1.45;white-space:pre-line;max-width:280px;opacity:0;transition:opacity .1s;font-variant-numeric:tabular-nums}
+#tip.on{opacity:1}
+
+/* ---------- statement ---------- */
+.stmt{display:flex;flex-direction:column}
+.stmt div{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
+.stmt div:last-child{border-bottom:0}
+.stmt div span:last-child{font-variant-numeric:tabular-nums;white-space:nowrap}
+.stmt .tot{font-weight:600}
+.stmt .tot span:last-child{font-size:16px}
+.stmt .ind span:first-child{padding-left:14px;color:var(--muted)}
+
+/* ---------- attention list ---------- */
+.att{display:flex;flex-direction:column}
+.att > div{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.att > div:last-child{border-bottom:0}
+.att .l{min-width:0}
+.att .l b{font-weight:500;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.att .l span{font-size:12px;color:var(--muted)}
+
+/* ---------- banners, modal, toast ---------- */
+.banner{border-radius:var(--radius);padding:12px 14px;margin-bottom:16px;background:var(--warn-bg);color:var(--warn);font-weight:500}
+.banner.err{background:var(--bad-bg);color:var(--bad)}
+.loading{padding:60px 0;text-align:center;color:var(--muted)}
+.overlay{position:fixed;inset:0;background:rgba(10,14,20,.45);display:flex;align-items:flex-start;justify-content:center;padding:6vh 16px;z-index:50;overflow:auto}
+.modal{background:var(--surface);border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,.25);width:min(640px,100%);display:flex;flex-direction:column}
+.modal header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line)}
+.modal header h2{font-family:var(--font-display);font-weight:400;font-size:20px}
+.modal .body{padding:18px 20px;display:flex;flex-direction:column;gap:14px}
+.modal footer{display:flex;justify-content:space-between;gap:8px;padding:14px 20px;border-top:1px solid var(--line);flex-wrap:wrap}
+.modal footer .r{display:flex;gap:8px;margin-left:auto}
+.fgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px}
+.fgrid .full{grid-column:1/-1}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:12.5px;color:var(--muted);font-weight:500}
+.field input,.field select{width:100%}
+.check{display:flex;align-items:center;gap:8px;font-weight:500}
+.check input{width:16px;height:16px}
+.hintline{font-size:12px;color:var(--muted)}
+@media (max-width:520px){.fgrid{grid-template-columns:1fr}}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:70;display:flex;flex-direction:column;gap:8px;align-items:center}
+#toast div{background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:10px;font-size:13.5px;box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:90vw}
+#toast div.err{background:var(--bad);color:#fff}
+details.notes summary{cursor:pointer;color:var(--muted);font-size:13px}
+details.notes ul{margin:10px 0 0;padding-left:18px;color:var(--muted);font-size:13px}
+.slist{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px}
+.slist > div{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.slist > div:last-child{border-bottom:0}
+
+/* ---------- phone layout ---------- */
+@media (max-width:700px){
+  body{font-size:15px}
+  input[type=text],input[type=number],input[type=date],input[type=search],select,textarea{font-size:16px;padding:9px 11px}
+  .app{display:block}
+  .rail{position:sticky;top:0;z-index:30;height:auto;flex-direction:row;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;padding-top:calc(10px + env(safe-area-inset-top));border-right:0;border-bottom:1px solid var(--line)}
+  .brand{padding:0}.brand .sub{display:none}.brand .mark{font-size:19px}
+  .rail-foot{margin:0;flex-direction:column;align-items:flex-end;gap:0;font-size:11.5px;padding:0;text-align:right}
+  .nav{position:fixed;left:0;right:0;bottom:0;z-index:40;flex-direction:row;gap:0;overflow:visible;background:var(--surface);border-top:1px solid var(--line);padding:5px 4px calc(5px + env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(0,0,0,.05)}
+  .nav a{flex:1;flex-direction:column;justify-content:center;gap:2px;padding:6px 2px;font-size:11px;font-weight:500;border-radius:10px;position:relative;color:var(--muted);min-width:0}
+  .nav a[aria-current="page"]{color:var(--accent);background:var(--accent-soft)}
+  .nav .ico{display:block;width:22px;height:22px}
+  .nav .lf{display:none}.nav .ls{display:inline}
+  .nav .cnt{display:none}
+  .nav .cnt.alert{display:inline;position:absolute;top:1px;left:calc(50% + 6px);font-size:10px;padding:0 5px;line-height:16px}
+  main{padding:16px 14px calc(86px + env(safe-area-inset-bottom))}
+  h1{font-size:22px}
+  .topbar{margin-bottom:14px;gap:10px}
+  .topbar > div:first-child{width:100%}
+  .topbar .lead{font-size:13px}
+  .actions{width:100%}
+  .actions .btn{flex:1 1 auto;justify-content:center}
+  .btn{min-height:42px;padding:8px 14px}
+  .btn.sm{min-height:36px;padding:6px 11px;font-size:13.5px}
+  .chip{padding:8px 13px;font-size:14px;white-space:nowrap}
+  .toolbar{gap:8px}
+  .toolbar .chips{flex-wrap:nowrap;overflow-x:auto;width:100%;padding-bottom:2px;scrollbar-width:none}
+  .toolbar .grow{flex:1 1 100%}
+  .toolbar select{flex:1 1 40%}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .tile{padding:12px 13px}
+  .tile .val{font-size:19px}.tile.hero .val{font-size:22px}
+  .tile .lbl,.tile .sub{font-size:12px}
+  .card{padding:15px 14px 14px}
+  .card .tablewrap{margin:0 -14px -14px}
+  .grid2{gap:12px;margin-top:12px}
+  .boxgrid{gap:10px}
+  .pb{grid-template-columns:minmax(78px,108px) 1fr 40px;column-gap:8px}
+  .pb .lab{font-size:12px}
+  .info-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px}
+  .att .row-actions{flex-wrap:wrap;justify-content:flex-end}
+  /* tables become cards */
+  .tablewrap:has(table.rs){overflow:visible;background:transparent;box-shadow:none}
+  table.rs thead{display:none}
+  table.rs,table.rs tbody,table.rs tfoot{display:block}
+  table.rs tbody tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;padding:13px 14px;margin-bottom:10px;background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow)}
+  table.rs tbody tr:hover{background:var(--surface)}
+  table.rs td{display:flex;flex-direction:column;align-items:flex-start;gap:1px;border:0;padding:0;text-align:left!important;white-space:normal;min-width:0}
+  table.rs td::before{content:attr(data-label);font-size:11.5px;color:var(--muted);font-weight:500}
+  table.rs td.c-main{grid-column:1/-1;order:-1}
+  table.rs td.c-main::before,table.rs td.c-act::before{display:none}
+  table.rs td.c-act{grid-column:1/-1}
+  table.rs td.c-act:not(:has(button)){display:none}
+  table.rs td.c-act .row-actions{justify-content:flex-start;width:100%}
+  table.rs td.c-act .btn{flex:1;justify-content:center}
+  table.rs td:not([data-label]):not(.c-main):not(.c-act){display:none}
+  table.rs .t-name{font-size:15.5px}
+  table.rs tfoot tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px;padding:12px 14px;background:var(--neutral-bg);border-radius:var(--radius)}
+  table.rs tfoot td{background:none}
+  .card table.rs tbody tr{box-shadow:none;border:1px solid var(--line)}
+  .card .tablewrap:has(table.rs){margin:0}
+  /* forms open as a bottom sheet */
+  .overlay{padding:0;align-items:flex-end}
+  .modal{width:100%;max-height:94vh;max-height:94dvh;overflow:auto;border-radius:18px 18px 0 0}
+  .modal header{position:sticky;top:0;background:var(--surface);z-index:1}
+  .modal footer{position:sticky;bottom:0;background:var(--surface);padding-bottom:calc(14px + env(safe-area-inset-bottom))}
+  .modal footer .actions{width:100%}
+  .modal footer .r{width:100%}.modal footer .r .btn{flex:1;justify-content:center}
+  .slist > div{align-items:flex-start}
+  #toast{bottom:calc(90px + env(safe-area-inset-bottom))}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail">
+    <div class="brand"><div class="mark">Учёт винтажа</div><div class="sub">Франция → Россия · посылки, товары, касса</div></div>
+    <nav class="nav" id="nav" aria-label="Разделы"></nav>
+    <div class="rail-foot" id="railfoot"></div>
+  </aside>
+  <main>
+    <div id="banner"></div>
+    <div id="view"><div class="loading">Загрузка данных…</div></div>
+  </main>
+</div>
+<div id="modal-root"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="tip" role="tooltip"></div>
+<noscript>Для работы приложения нужен JavaScript.</noscript>
+<script src="storage.js"></script>
+<script>
+"use strict";
+/* ============================== state ============================== */
+const S = {
+  db:null, dl:null, canWrite:true, status:"loading", err:null,
+  boxes:new Map(), items:new Map(), ledger:new Map(), settings:{rate:91},
+  loaded:{boxes:false, items:false, ledger:false, settings:false},
+  f:{ boxSt:"all", boxQ:"", itQ:"", itSt:"all", itCat:"all", itBox:"all", itSort:"box", itDir:1,
+      saQ:"", saPaid:"all", saCh:"all", saMonth:"all", leType:"all" }
+};
+
+/* ============================== format ============================== */
+const NF = new Intl.NumberFormat("ru-RU",{maximumFractionDigits:0});
+const NF1 = new Intl.NumberFormat("ru-RU",{maximumFractionDigits:1});
+const n0 = v => NF.format(Math.round(+v||0));
+const rub = v => n0(v) + " ₽";
+const eur = v => n0(v) + " €";
+const pct = v => (isFinite(v) ? Math.round(v*100) : 0) + "%";
+const fdate = s => s ? s.split("-").reverse().join(".") : "—";
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const today = () => { const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+const daysSince = s => s ? Math.max(0, Math.round((Date.parse(today()) - Date.parse(s))/864e5)) : null;
+const compact = v => { v=Math.round(v); const a=Math.abs(v); if(a>=1e6) return NF1.format(v/1e6)+" млн"; if(a>=1e4) return NF.format(v/1e3)+" тыс"; return NF.format(v); };
+const MONTHS = ["янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"];
+const monthLabel = ym => { const [y,m]=ym.split("-"); return MONTHS[+m-1]+" "+y.slice(2); };
+const plural = (n, one, few, many) => { const a=Math.abs(n)%100, b=a%10; if(a>10&&a<20) return many; if(b>1&&b<5) return few; if(b===1) return one; return many; };
+
+const CH = {shop:"Магазин", avito:"Авито", other:"Другое", broken:"Бой", gift:"Подарок"};
+const METHOD = {cash:"Наличные", card:"Карта", other:"Другое"};
+const BOX_ST = {packing:["Собирается","neutral","○"], transit:["В пути","warn","➜"], arrived:["Доставлена","good","✓"], problem:["Проблема","bad","!"]};
+const ITEM_ST = {stock:["В продаже","info","●"], partial:["Частично продано","warn","◐"], sold:["Продано","good","✓"], broken:["Бой","bad","✕"], gift:["Подарок","neutral","♥"]};
+const LTYPE = {exchange:["Получено в € (обмен)","info"], shop_payout:["Выплата магазина","good"], expense:["Расход","bad"], income:["Доход","good"]};
+const CATS = ["Фарфор","Стекло и хрусталь","Металл и серебро","Фаянс и керамика","Прочее"];
+const pill = (tone, icon, label) => `<span class="pill pill-${tone}"><span aria-hidden="true">${icon}</span>${esc(label)}</span>`;
+const boxPill = st => { const d = BOX_ST[st] || BOX_ST.arrived; return pill(d[1], d[2], d[0]); };
+const itemPill = st => { const d = ITEM_ST[st]; return pill(d[1], d[2], d[0]); };
+const paidPill = s => s.paid ? pill("good","✓","Оплачено"+(s.paidDate?" "+fdate(s.paidDate).slice(0,5):"")) : pill("warn","◷","Ждёт оплаты");
+
+/* ============================== compute ============================== */
+function compute(){
+  const rate = +S.settings.rate || 91;
+  const boxCost = {}, boxCnt = {};
+  for (const it of S.items.values()){ boxCost[it.boxId]=(boxCost[it.boxId]||0)+(+it.costEur||0); boxCnt[it.boxId]=(boxCnt[it.boxId]||0)+1; }
+  const I = new Map();
+  const T = {rate, rev:0, exp:0, cogsEur:0, lostEur:0, itemsEur:0, shipEur:0, stockCostEur:0, stockValue:0, stockQty:0, unpaid:0, unpaidN:0,
+             salesN:0, paidRev:0, shopPaid:0, chan:{shop:{rev:0,n:0}, avito:{rev:0,n:0}, other:{rev:0,n:0}}, cats:{},
+             inTransit:0, packing:0, exchEur:0, shopPayout:0, otherExp:0, otherInc:0, months:{}, undated:0};
+  for (const it of S.items.values()){
+    const qty = Math.max(0, +it.qty||0);
+    let sold=0, broken=0, gift=0, rev=0, exp=0, unpaid=0, unpaidN=0;
+    for (const s of (it.sales||[])){
+      const q = +s.qty||0, a = +s.amount||0, e = +s.expenses||0;
+      if (s.channel==="broken") broken+=q; else if (s.channel==="gift") gift+=q;
+      else {
+        sold+=q; rev+=a; exp+=e; T.salesN++;
+        const ch = T.chan[s.channel] || T.chan.other; ch.rev+=a; ch.n++;
+        if (!s.paid){ unpaid+=a; unpaidN++; } else { T.paidRev+=a; if (s.channel==="shop") T.shopPaid+=a; }
+        const d = s.date || s.paidDate; if (d) T.months[d.slice(0,7)] = (T.months[d.slice(0,7)]||0) + a; else T.undated++;
+      }
+    }
+    const remaining = Math.max(0, qty - sold - broken - gift);
+    const box = S.boxes.get(it.boxId);
+    const extra = box ? (+box.shippingEur||0) + (+box.extraEur||0) : 0;
+    const share = extra ? (boxCost[it.boxId] > 0 ? extra*(+it.costEur||0)/boxCost[it.boxId] : extra/(boxCnt[it.boxId]||1)) : 0;
+    const landed = (+it.costEur||0) + share;
+    const unit = qty ? landed/qty : landed;
+    const cogsEur = unit * Math.min(sold+broken+gift, qty || (sold+broken+gift));
+    let status;
+    if (qty===0) status = sold>0 ? "sold" : "stock";
+    else if (remaining===qty) status = "stock";
+    else if (remaining>0) status = "partial";
+    else if (sold>0) status = "sold";
+    else if (broken>0) status = "broken";
+    else status = "gift";
+    const st = {qty, sold, broken, gift, remaining, rev, exp, net:rev-exp, unpaid, unpaidN, landed, unit, cogsEur, status,
+                stockCostEur: unit*remaining, stockValue: remaining*(+it.priceRub||0)};
+    I.set(it.id, st);
+    T.rev+=rev; T.exp+=exp; T.cogsEur+=cogsEur; T.lostEur += unit*(broken+gift); T.itemsEur += +it.costEur||0;
+    T.stockCostEur+=st.stockCostEur; T.stockValue+=st.stockValue; T.stockQty+=remaining; T.unpaid+=unpaid; T.unpaidN+=unpaidN;
+    const c = it.cat || "Прочее"; const cc = T.cats[c] || (T.cats[c] = {items:0, sold:0, rev:0, stock:0});
+    cc.items++; cc.sold+=sold; cc.rev+=rev; cc.stock+=remaining;
+  }
+  const B = new Map();
+  for (const b of S.boxes.values()){
+    T.shipEur += (+b.shippingEur||0) + (+b.extraEur||0);
+    if (b.status==="transit") T.inTransit++;
+    if (b.status==="packing") T.packing++;
+    B.set(b.id, {items:0, qty:0, sold:0, lost:0, remaining:0, costEur:0, invEur:(+b.shippingEur||0)+(+b.extraEur||0), rev:0, exp:0, unpaid:0, stockValue:0});
+  }
+  for (const it of S.items.values()){
+    const bs = B.get(it.boxId); if (!bs) continue; const st = I.get(it.id);
+    bs.items++; bs.qty+=st.qty; bs.sold+=st.sold; bs.lost+=st.broken+st.gift; bs.remaining+=st.remaining;
+    bs.costEur += +it.costEur||0; bs.invEur += +it.costEur||0; bs.rev+=st.rev; bs.exp+=st.exp; bs.unpaid+=st.unpaid; bs.stockValue+=st.stockValue;
+  }
+  for (const bs of B.values()){ bs.net = bs.rev - bs.exp; bs.invRub = bs.invEur*rate; bs.payback = bs.invRub ? bs.net/bs.invRub : 0; }
+  for (const l of S.ledger.values()){
+    const a = +l.amount||0, inRub = l.currency==="EUR" ? a*rate : a;
+    if (l.type==="exchange") T.exchEur += l.currency==="EUR" ? a : a/rate;
+    else if (l.type==="shop_payout") T.shopPayout += inRub;
+    else if (l.type==="expense") T.otherExp += inRub;
+    else if (l.type==="income") T.otherInc += inRub;
+  }
+  T.net = T.rev - T.exp;
+  T.invEur = T.itemsEur + T.shipEur;
+  T.gross = T.net - T.cogsEur*rate;
+  T.profit = T.gross - T.otherExp + T.otherInc;
+  return {I, B, T};
+}
+let C = null;
+
+/* ============================== db layer ============================== */
+const queues = new Map();
+function errText(e){
+  const code = e && e.code;
+  if (code==="invalid_argument") return "Изменение отклонено: возможно, у вас нет прав на запись.";
+  if (code==="quota_exceeded") return "База данных заполнена: удалите ненужные записи.";
+  if (code==="resource_exhausted") return "Слишком много запросов. Подождите пару секунд и повторите.";
+  if (code==="revoked") return "Доступ к данным отозван.";
+  return "Не удалось сохранить: нет связи с базой данных. Повторите позже.";
+}
+function enqueue(path, fn){
+  const prev = queues.get(path) || Promise.resolve();
+  const p = prev.catch(()=>{}).then(async () => {
+    try { return await fn(); }
+    catch(e){ if (e && e.code==="unavailable"){ await new Promise(r=>setTimeout(r, 400+Math.random()*600)); return await fn(); } throw e; }
+  });
+  queues.set(path, p);
+  return p;
+}
+function clean(o){
+  const out = {};
+  for (const [k,v] of Object.entries(o)){ if (k==="id" || v===undefined) continue; out[k]=v; }
+  return out;
+}
+async function saveDoc(col, id, data){
+  if (!S.db) throw {code:"unavailable"};
+  const ref = id ? S.db.collection(col).doc(id) : S.db.collection(col).doc();
+  try { await enqueue(ref.path, () => ref.set(clean(data))); }
+  catch(e){ if (e && e.code==="invalid_argument" && S.canWrite===null){ S.canWrite=false; applyWrite(); } toast(errText(e), true); throw e; }
+  return ref.id;
+}
+async function delDoc(col, id){
+  const ref = S.db.collection(col).doc(id);
+  try { await enqueue(ref.path, () => ref.delete()); }
+  catch(e){ toast(errText(e), true); throw e; }
+}
+
+async function init(){
+  let tries = 0;
+  while (!(window.claude && typeof window.claude.use==="function") && tries < 30){ await new Promise(r=>setTimeout(r,100)); tries++; }
+  if (!(window.claude && typeof window.claude.use==="function")){ S.status="nodb"; render(); return; }
+  let db = null;
+  try { db = await window.claude.use("db"); } catch(e){ db = null; }
+  if (!db){ S.status="nodb"; render(); return; }
+  S.db = db;
+  window.claude.use("user").then(async u => {
+    if (!u) return;
+    try { const c = await u.can("data.write"); if (c===false){ S.canWrite=false; applyWrite(); } else if (c===null) S.canWrite=null; } catch(e){}
+  }).catch(()=>{});
+  window.claude.use("downloads").then(d => { S.dl = d; if (d) scheduleRender(); }).catch(()=>{});
+  const timer = setTimeout(() => { if (!allLoaded()){ S.status="slow"; scheduleRender(); } }, 10000);
+  const onErr = e => { clearTimeout(timer); S.status="error"; S.err=e; scheduleRender(); };
+  const done = () => { if (allLoaded()){ clearTimeout(timer); S.status="ready"; } scheduleRender(); };
+  for (const name of ["boxes","items","ledger"]){
+    db.collection(name).onSnapshot(snap => {
+      const m = new Map(); for (const d of snap.docs){ const v=d.data(); if (v) m.set(d.id, Object.assign({id:d.id}, v)); }
+      S[name] = m; if (!snap.metadata.fromCache) S.loaded[name]=true; done();
+    }, onErr);
+  }
+  db.doc("meta/settings").onSnapshot(snap => {
+    S.settings = Object.assign({rate:91}, snap.exists ? snap.data() : {});
+    if (!snap.metadata.fromCache) S.loaded.settings=true; done();
+  }, onErr);
+}
+const allLoaded = () => Object.values(S.loaded).every(Boolean);
+function applyWrite(){ document.body.classList.toggle("readonly", S.canWrite===false); }
+
+/* ============================== render loop ============================== */
+let rq = 0;
+function scheduleRender(){ if (rq) return; rq = requestAnimationFrame(() => { rq=0; render(); }); }
+function route(){ const h = (location.hash||"").replace(/^#/,""); return h || "overview"; }
+
+function render(){
+  const ae = document.activeElement, aeId = ae && ae.id && document.getElementById("view").contains(ae) ? ae.id : null;
+  const sel = aeId && ae.setSelectionRange && typeof ae.selectionStart==="number" ? [ae.selectionStart, ae.selectionEnd] : null;
+  C = compute();
+  renderNav();
+  const b = document.getElementById("banner");
+  b.innerHTML = S.status==="nodb" ? `<div class="banner err">Хранилище данных недоступно. Проверьте, что сервер запущен, и обновите страницу.</div>`
+    : S.status==="error" ? `<div class="banner err">Ошибка загрузки данных (${esc(S.err && S.err.code || "unknown")}). Обновите страницу позже.</div>`
+    : S.status==="slow" ? `<div class="banner">Нет ответа от базы данных — показанные данные могут быть неактуальны.</div>`
+    : (window.__store && window.__store.mode==="local") ? `<div class="banner">Локальный режим: данные хранятся только в этом браузере. Регулярно скачивайте резервную копию (Бухгалтерия → Резервная копия).</div>` : "";
+  const v = document.getElementById("view");
+  const r = route();
+  const haveData = S.boxes.size || S.items.size || S.ledger.size;
+  if (S.status==="loading" && !haveData){ v.innerHTML = `<div class="loading">Загрузка данных…</div>`; return; }
+  let html;
+  if (r.startsWith("box-")) html = viewBox(r.slice(4));
+  else if (r==="boxes") html = viewBoxes();
+  else if (r==="items") html = viewItems();
+  else if (r==="sales") html = viewSales();
+  else if (r==="finance") html = viewFinance();
+  else html = viewOverview();
+  v.innerHTML = html;
+  if (aeId){ const el = document.getElementById(aeId); if (el){ el.focus(); if (sel && el.setSelectionRange) try{ el.setSelectionRange(sel[0], sel[1]); }catch(e){} } }
+}
+const NAV_ICONS = {
+  overview:'<rect x="3" y="3" width="6" height="6" rx="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5"/>',
+  boxes:'<path d="M3 6.5 10 3l7 3.5v7L10 17l-7-3.5z"/><path d="M3 6.5 10 10l7-3.5M10 10v7"/>',
+  items:'<path d="M3 10.5V3h7.5L17 9.5 10.5 16z"/><circle cx="6.8" cy="6.8" r="1.2"/>',
+  sales:'<path d="M5 2.5h10v15l-2.5-1.5-2.5 1.5-2.5-1.5L5 17.5z"/><path d="M8 6.5h4M8 9.5h4M8 12.5h2.5"/>',
+  finance:'<rect x="4" y="2.5" width="12" height="15" rx="2"/><path d="M7 5.5h6v3H7z"/><path d="M7.5 12h.01M10 12h.01M12.5 12h.01M7.5 14.5h.01M10 14.5h.01M12.5 14.5h.01"/>'
+};
+function renderNav(){
+  const r = route(), cur = r.startsWith("box-") ? "boxes" : r;
+  const salesN = C.T.salesN;
+  const links = [["overview","Обзор","Обзор",""],["boxes","Посылки","Посылки",S.boxes.size],["items","Товары","Товары",S.items.size],
+                 ["sales","Продажи","Продажи", C.T.unpaidN ? `<span class="cnt alert" title="Ждут оплаты">${C.T.unpaidN}</span>` : salesN],["finance","Бухгалтерия","Касса",""]];
+  document.getElementById("nav").innerHTML = links.map(([id,l,short,c]) =>
+    `<a href="#${id}" ${cur===id?'aria-current="page"':""}><svg class="ico" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${NAV_ICONS[id]}</svg><span class="lf">${l}</span><span class="ls">${short}</span>${typeof c==="string" && c.startsWith("<") ? c : `<span class="cnt">${c===""?"":n0(c)}</span>`}</a>`).join("");
+  document.getElementById("railfoot").innerHTML =
+    `<div>Курс: <b>${NF1.format(C.T.rate)} ₽ за €</b></div>` +
+    (window.__store && window.__store.mode ? `<div>Данные: <b>${window.__store.mode==="server"?"на сервере":"в этом браузере"}</b></div>` : "") +
+    (window.__store && window.__store.lock ? `<div><a href="#" data-act="lock">Выйти (заблокировать)</a></div>` : "") +
+    (S.canWrite===false ? `<div>Режим просмотра</div>` : "");
+}
+function topbar(title, lead, actions){
+  return `<div class="topbar"><div><h1>${title}</h1>${lead?`<div class="lead">${lead}</div>`:""}</div>${actions?`<div class="actions">${actions}</div>`:""}</div>`;
+}
+function niceScale(max, target=4){
+  if (max <= 0) return {max:1, step:1, n:1};
+  const raw = max/target, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1,2,2.5,5,10].map(x=>x*mag).find(x => x >= raw);
+  const n = Math.ceil(max/step); return {max:n*step, step, n};
+}
+function boxesSorted(){
+  return [...S.boxes.values()].sort((a,b) => {
+    const ka = (a.status==="packing"?"2":"1") + (a.sentDate||"0000"), kb = (b.status==="packing"?"2":"1") + (b.sentDate||"0000");
+    return ka < kb ? -1 : ka > kb ? 1 : (a.order||0) - (b.order||0);
+  });
+}
+const boxName = id => { const b = S.boxes.get(id); return b ? b.name : "Без посылки"; };
+
+/* ============================== overview ============================== */
+function viewOverview(){
+  const {T, B} = C;
+  if (!S.boxes.size && !S.items.size){
+    return topbar("Обзор") + `<div class="card empty"><p>Пока нет данных. Начните с первой посылки: добавьте её, затем положите в неё товары.</p>
+      <button class="btn primary w" data-act="box-new">Новая посылка</button></div>`;
+  }
+  const kpis = `<section class="kpis">
+    <div class="tile hero"><span class="lbl">Выручка за всё время</span><span class="val">${rub(T.rev)}</span><span class="sub">${n0(T.salesN)} ${plural(T.salesN,"продажа","продажи","продаж")} · чистыми ${rub(T.net)}</span></div>
+    <div class="tile"><span class="lbl">Вложено в товар и доставку</span><span class="val">${eur(T.invEur)}</span><span class="sub">≈ ${rub(T.invEur*T.rate)} по текущему курсу</span></div>
+    <div class="tile"><span class="lbl">Прибыль по проданному</span><span class="val ${T.gross>=0?"pos":"neg"}">${rub(T.gross)}</span><span class="sub">чистая выручка минус себестоимость</span></div>
+    <div class="tile"><span class="lbl">На складе</span><span class="val">${n0(T.stockQty)} шт</span><span class="sub">по ценам ${rub(T.stockValue)}</span></div>
+    <div class="tile ${T.unpaidN?"attn":""}"><span class="lbl">Ждёт оплаты</span><span class="val">${rub(T.unpaid)}</span><span class="sub">${T.unpaidN ? `<a href="#sales" data-act="filter-unpaid">${T.unpaidN} ${plural(T.unpaidN,"продажа","продажи","продаж")} — проверить</a>` : "всё оплачено"}</span></div>
+    <div class="tile"><span class="lbl">Посылки в пути</span><span class="val">${T.inTransit}</span><span class="sub">${T.packing ? `ещё ${T.packing} собирается` : "новых не собирается"}</span></div>
+  </section>`;
+
+  // payback chart
+  const rows = boxesSorted().filter(b => b.status!=="packing");
+  const mx = Math.max(1, ...rows.map(b => { const s=B.get(b.id); return Math.max(s.invRub, s.net); }));
+  const sc = niceScale(mx, 4);
+  const grid = `repeating-linear-gradient(to right, var(--grid) 0 1px, transparent 1px calc(100% / ${sc.n}))`;
+  const chartRows = rows.map(b => {
+    const s = B.get(b.id);
+    const tip = `${b.name}\nВложено: ${eur(s.invEur)} ≈ ${rub(s.invRub)}\nЧистая выручка: ${rub(s.net)}\nОкупаемость: ${pct(s.payback)}\nПродано ${s.sold} из ${s.qty} шт`;
+    return `<div class="lab"><a href="#box-${esc(b.id)}" title="${esc(b.name)}">${esc(b.name)}</a></div>
+      <div class="bars" data-tip="${esc(tip)}" tabindex="0" aria-label="${esc(tip)}">
+        <i style="width:${(s.invRub/sc.max*100).toFixed(2)}%;background:var(--s1)"></i>
+        <i style="width:${(Math.max(0,s.net)/sc.max*100).toFixed(2)}%;background:var(--s2)"></i>
+      </div>
+      <div class="val ${s.payback>=1?"pos":""}">${s.invRub?pct(s.payback):"—"}</div>`;
+  }).join("");
+  const axis = Array.from({length:sc.n+1}, (_,k) => `<span style="left:${(k/sc.n*100).toFixed(2)}%">${compact(k*sc.step)}</span>`).join("");
+  const payback = `<section class="card">
+    <div class="card-h"><h2>Окупаемость посылок</h2><div class="legend"><span><i style="background:var(--s1)"></i>Вложено (₽ по курсу)</span><span><i style="background:var(--s2)"></i>Чистая выручка</span></div></div>
+    <div class="pb" style="--gridbg:${grid}">${chartRows}<div></div><div class="axis">${axis}</div><div class="val">окуп.</div></div>
+  </section>`;
+
+  // attention
+  const att = [];
+  const unpaid = [];
+  for (const it of S.items.values()) for (const s of (it.sales||[])) if (!s.paid && s.channel!=="broken" && s.channel!=="gift") unpaid.push({it, s});
+  unpaid.sort((a,b) => (+b.s.amount||0) - (+a.s.amount||0));
+  for (const {it, s} of unpaid.slice(0,6)) att.push(`<div><div class="l"><b>${esc(it.name)}</b><span>${CH[s.channel]||"Другое"} · ${esc(boxName(it.boxId))}</span></div>
+     <div class="row-actions"><span class="num">${rub(s.amount)}</span><button class="btn sm w" data-act="sale-paid" data-item="${esc(it.id)}" data-sale="${esc(s.id)}">Оплачено</button></div></div>`);
+  if (unpaid.length > 6) att.push(`<div><span class="muted">и ещё ${unpaid.length-6}</span><a href="#sales" data-act="filter-unpaid">Все неоплаченные</a></div>`);
+  const transit = boxesSorted().filter(b => b.status==="transit" || b.status==="packing" || b.status==="problem");
+  for (const b of transit){
+    const s = B.get(b.id), d = daysSince(b.sentDate);
+    const sub = b.status==="packing" ? `${s.items} ${plural(s.items,"товар","товара","товаров")} · вложено ${eur(s.invEur)}` : `${esc(b.courier||"—")} · отправлена ${fdate(b.sentDate)}${d!==null?` (${d} дн.)`:""}`;
+    att.push(`<div><div class="l"><b><a href="#box-${esc(b.id)}" style="color:inherit;text-decoration:none">${esc(b.name)}</a></b><span>${sub}</span></div>${boxPill(b.status)}</div>`);
+  }
+  const attention = `<section class="card"><div class="card-h"><h2>Требует внимания</h2><span class="hint">неоплаченные продажи и посылки в пути</span></div>
+    <div class="att">${att.join("") || `<div class="empty">Всё в порядке</div>`}</div></section>`;
+
+  // channels
+  const chs = ["shop","avito","other"], tot = chs.reduce((a,k)=>a+T.chan[k].rev,0) || 1, col = {shop:"var(--s1)", avito:"var(--s2)", other:"var(--s3)"};
+  const seg = chs.filter(k=>T.chan[k].rev>0).map(k => { const sh=T.chan[k].rev/tot;
+    return `<div style="flex:${sh};background:${col[k]}" data-tip="${esc(`${CH[k]}\n${rub(T.chan[k].rev)} · ${pct(sh)}\n${T.chan[k].n} продаж`)}">${sh>=.09?pct(sh):""}</div>`; }).join("");
+  const chTable = `<table><thead><tr><th>Канал</th><th class="n">Продаж</th><th class="n">Выручка</th><th class="n">Средний чек</th></tr></thead><tbody>${
+    chs.map(k => `<tr><td><span class="legend"><span><i style="background:${col[k]}"></i>${CH[k]}</span></span></td><td class="n">${T.chan[k].n}</td><td class="n">${rub(T.chan[k].rev)}</td><td class="n">${T.chan[k].n?rub(T.chan[k].rev/T.chan[k].n):"—"}</td></tr>`).join("")}</tbody></table>`;
+  const channels = `<section class="card"><div class="card-h"><h2>Продажи по каналам</h2><div class="legend">${chs.map(k=>`<span><i style="background:${col[k]}"></i>${CH[k]}</span>`).join("")}</div></div>
+    <div class="seg" role="img" aria-label="Доли выручки по каналам">${seg}</div><div class="tablewrap" style="box-shadow:none">${chTable}</div></section>`;
+
+  // categories
+  const cats = Object.entries(T.cats).sort((a,b)=>b[1].rev-a[1].rev);
+  const cmax = Math.max(1, ...cats.map(c=>c[1].rev));
+  const catTable = `<table><thead><tr><th>Категория</th><th class="n">Товаров</th><th class="n">Продано, шт</th><th class="n">На складе, шт</th><th class="n">Выручка</th><th style="width:28%"></th></tr></thead><tbody>${
+    cats.map(([k,c]) => `<tr><td>${esc(k)}</td><td class="n">${c.items}</td><td class="n">${c.sold}</td><td class="n">${c.stock}</td><td class="n">${rub(c.rev)}</td><td style="vertical-align:middle"><div class="inbar" style="width:${(c.rev/cmax*100).toFixed(1)}%"></div></td></tr>`).join("")}</tbody></table>`;
+  const catsCard = `<section class="card"><div class="card-h"><h2>Выручка по категориям</h2><span class="hint">категория задаётся в карточке товара</span></div><div class="tablewrap">${catTable}</div></section>`;
+
+  return topbar("Обзор", `Сводка по всем посылкам и продажам. Себестоимость считается в евро и переводится в рубли по курсу ${NF1.format(T.rate)} ₽ (меняется в «Бухгалтерии»).`) +
+    kpis + `<div class="grid2">${payback}<div class="stack">${attention}${channels}</div></div><div class="grid2">${catsCard}</div>`;
+}
+
+/* ============================== boxes ============================== */
+function viewBoxes(){
+  const {B} = C, f = S.f;
+  const q = f.boxQ.trim().toLowerCase();
+  const list = boxesSorted().reverse().sort((a,b) => {
+    const pr = {packing:0, problem:1, transit:2, arrived:3};
+    return (pr[a.status]??3) - (pr[b.status]??3);
+  }).filter(b => (f.boxSt==="all" || b.status===f.boxSt) && (!q || [b.name,b.courier,b.tracking,b.note].join(" ").toLowerCase().includes(q)));
+  const chips = [["all","Все"],["packing","Собирается"],["transit","В пути"],["arrived","Доставлена"],["problem","Проблема"]]
+    .map(([k,l]) => `<button class="chip" data-act="set" data-key="boxSt" data-val="${k}" aria-pressed="${f.boxSt===k}">${l}${k!=="all"?` · ${[...S.boxes.values()].filter(b=>b.status===k).length}`:""}</button>`).join("");
+  const cards = list.map(b => {
+    const s = B.get(b.id);
+    const d = daysSince(b.sentDate);
+    const dates = b.status==="packing" ? "ещё не отправлена"
+      : `отправлена ${fdate(b.sentDate)}` + (b.arrivedDate ? ` → доставлена ${fdate(b.arrivedDate)}` : (b.status==="transit" && d!==null ? ` · в пути ${d} дн.` : ""));
+    const soldPct = s.qty ? s.sold/s.qty*100 : 0, lostPct = s.qty ? s.lost/s.qty*100 : 0;
+    const allSold = s.qty>0 && s.remaining===0;
+    return `<button class="boxcard" data-act="go" data-to="box-${esc(b.id)}">
+      <div class="top"><h3>${esc(b.name)}</h3>${boxPill(b.status)}</div>
+      <div class="meta"><span>${esc(b.courier||"курьер не указан")}</span>${b.weightKg?`<span>${NF1.format(b.weightKg)} кг</span>`:""}<span>${dates}</span>${b.tracking?`<span>трек ${esc(b.tracking)}</span>`:""}</div>
+      <div><div class="meter" aria-hidden="true"><i style="width:${soldPct}%"></i>${lostPct?`<i class="lost" style="width:${lostPct}%"></i>`:""}</div>
+        <div class="meter-l"><span>продано ${s.sold} из ${s.qty} шт${s.lost?` · бой/подарки ${s.lost}`:""}</span><span>${allSold?pill("good","✓","Всё продано"):`${s.items} ${plural(s.items,"позиция","позиции","позиций")}`}</span></div></div>
+      <div class="stats"><div><span>Вложено</span><b>${eur(s.invEur)}</b></div><div><span>Чистая выручка</span><b>${rub(s.net)}</b></div><div><span>Окупаемость</span><b class="${s.payback>=1?"pos":""}">${s.invRub?pct(s.payback):"—"}</b></div></div>
+    </button>`;
+  }).join("");
+  // couriers
+  const cour = {};
+  for (const b of S.boxes.values()){ if (!b.courier) continue; const c = cour[b.courier] || (cour[b.courier]={n:0,kg:0,ship:0,last:""}); c.n++; c.kg+=+b.weightKg||0; c.ship+=+b.shippingEur||0; if ((b.sentDate||"")>c.last) c.last=b.sentDate; }
+  const courRows = Object.entries(cour).sort((a,b)=>b[1].n-a[1].n).map(([k,c]) =>
+    `<tr><td>${esc(k)}</td><td class="n">${c.n}</td><td class="n">${c.kg?NF1.format(c.kg)+" кг":"—"}</td><td class="n">${eur(c.ship)}</td><td class="n">${fdate(c.last)}</td></tr>`).join("");
+  return topbar("Посылки", "Каждая посылка — это ящик с товарами, который везёт курьер. Откройте посылку, чтобы увидеть и добавить товары внутри.",
+      `<button class="btn primary w" data-act="box-new">+ Новая посылка</button>`) +
+    `<div class="toolbar"><div class="chips">${chips}</div><input class="grow" type="search" id="boxQ" data-filter="boxQ" placeholder="Поиск: название, курьер, трек-номер" value="${esc(f.boxQ)}"></div>` +
+    (cards ? `<div class="boxgrid">${cards}</div>` : `<div class="card empty">Посылок с такими условиями нет.</div>`) +
+    (courRows ? `<div class="grid2"><section class="card"><div class="card-h"><h2>Курьеры</h2><span class="hint">сколько посылок отвёз каждый</span></div><div class="tablewrap"><table><thead><tr><th>Курьер</th><th class="n">Посылок</th><th class="n">Вес</th><th class="n">Доставка</th><th class="n">Последняя</th></tr></thead><tbody>${courRows}</tbody></table></div></section></div>` : "");
+}
+
+function viewBox(id){
+  const b = S.boxes.get(id);
+  if (!b) return `<a class="back" href="#boxes">← Все посылки</a>` + `<div class="card empty">Посылка не найдена — возможно, она удалена.</div>`;
+  const s = C.B.get(id);
+  const items = [...S.items.values()].filter(it => it.boxId===id).sort((a,b)=>(a.row||1e9)-(b.row||1e9) || a.name.localeCompare(b.name,"ru"));
+  const next = b.status==="packing" ? `<button class="btn primary w" data-act="box-ship" data-id="${esc(id)}">Отправить сегодня</button>`
+    : b.status==="transit" ? `<button class="btn primary w" data-act="box-arrive" data-id="${esc(id)}">Отметить доставленной</button>` : "";
+  const info = [["Курьер", esc(b.courier||"—")],["Трек-номер", esc(b.tracking||"—")],["Вес", b.weightKg?NF1.format(b.weightKg)+" кг":"—"],
+    ["Отправлена", fdate(b.sentDate)],["Доставлена", fdate(b.arrivedDate)],["Доставка", eur(b.shippingEur)],["Прочие расходы", eur(b.extraEur)]]
+    .map(([k,v]) => `<div><span>${k}</span><b>${v}</b></div>`).join("");
+  return `<a class="back" href="#boxes">← Все посылки</a>` +
+    topbar(esc(b.name) + " " + boxPill(b.status), b.note ? esc(b.note) : "",
+      `${next}<button class="btn w" data-act="item-new" data-box="${esc(id)}">+ Товар в посылку</button><button class="btn w" data-act="box-edit" data-id="${esc(id)}">Изменить</button><button class="btn danger w" data-act="box-del" data-id="${esc(id)}">Удалить</button>`) +
+    `<section class="kpis">
+      <div class="tile"><span class="lbl">Позиций / штук</span><span class="val">${s.items} / ${s.qty}</span><span class="sub">на складе ${s.remaining} шт</span></div>
+      <div class="tile"><span class="lbl">Продано</span><span class="val">${s.sold} шт</span><span class="sub">${s.lost?`бой и подарки: ${s.lost} шт`:"без потерь"}</span></div>
+      <div class="tile"><span class="lbl">Вложено</span><span class="val">${eur(s.invEur)}</span><span class="sub">товар ${eur(s.costEur)} + доставка ${eur(s.invEur-s.costEur)}</span></div>
+      <div class="tile"><span class="lbl">Чистая выручка</span><span class="val">${rub(s.net)}</span><span class="sub">${s.unpaid?`ждёт оплаты ${rub(s.unpaid)}`:"всё оплачено"}</span></div>
+      <div class="tile"><span class="lbl">Окупаемость</span><span class="val ${s.payback>=1?"pos":""}">${s.invRub?pct(s.payback):"—"}</span><span class="sub">вложено ≈ ${rub(s.invRub)}</span></div>
+      <div class="tile"><span class="lbl">Остаток по ценам</span><span class="val">${rub(s.stockValue)}</span><span class="sub">если продать всё по прайсу</span></div>
+    </section>
+    <div class="grid2"><section class="card"><div class="card-h"><h2>Данные посылки</h2></div><div class="info-grid">${info}</div></section></div>
+    <div style="margin-top:16px">${itemsTable(items, {noBox:true, box:id})}</div>`;
+}
+
+/* ============================== items ============================== */
+function itemsTable(items, opt={}){
+  if (!items.length) return `<div class="card empty">Товаров нет.${opt.noBox?` <button class="btn sm w" data-act="item-new" data-box="${esc(opt.box||"")}">Добавить товар</button>`:""}</div>`;
+  const {I} = C;
+  const sortable = !opt.noBox;
+  const th = (k, label, cls="") => sortable ? `<th class="sort ${cls}" data-act="sort" data-key="${k}">${label}${S.f.itSort===k?(S.f.itDir>0?" ↑":" ↓"):""}</th>` : `<th class="${cls}">${label}</th>`;
+  let sumCost=0, sumRev=0, sumRem=0, sumQty=0;
+  const rows = items.map(it => {
+    const st = I.get(it.id); sumCost+=+it.costEur||0; sumRev+=st.rev; sumRem+=st.remaining; sumQty+=st.qty;
+    return `<tr class="clickable" data-act="item-open" data-id="${esc(it.id)}">
+      <td class="c-main"><div class="t-name">${esc(it.name)}</div>${it.note?`<div class="t-note">${esc(it.note)}</div>`:""}</td>
+      <td class="muted" data-label="Категория">${esc(it.cat||"Прочее")}</td>
+      ${opt.noBox?"":`<td data-label="Посылка"><a href="#box-${esc(it.boxId)}" data-stop="1">${esc(boxName(it.boxId))}</a></td>`}
+      <td class="n" data-label="Остаток / всего">${st.remaining} / ${st.qty}</td>
+      <td class="n" data-label="Закупка">${eur(it.costEur)}</td>
+      <td class="n" data-label="Цена за шт">${it.priceRub?rub(it.priceRub):"—"}</td>
+      <td data-label="Статус">${itemPill(st.status)}</td>
+      <td class="n" data-label="Выручка">${st.rev?rub(st.rev):"—"}</td>
+      <td class="c-act"><div class="row-actions">${st.remaining>0?`<button class="btn sm w" data-act="sale-new" data-item="${esc(it.id)}">Продать</button>`:""}</div></td>
+    </tr>`;
+  }).join("");
+  return `<div class="tablewrap"><table class="rs"><thead><tr>${th("name","Товар")}${th("cat","Категория")}${opt.noBox?"":th("box","Посылка")}${th("rem","Остаток / всего","n")}${th("cost","Закупка","n")}${th("price","Цена за шт","n")}${th("status","Статус")}${th("rev","Выручка","n")}<th></th></tr></thead>
+    <tbody>${rows}</tbody><tfoot><tr><td class="c-main" colspan="${opt.noBox?2:3}">${items.length} ${plural(items.length,"позиция","позиции","позиций")}</td><td class="n" data-label="Остаток / всего">${sumRem} / ${sumQty}</td><td class="n" data-label="Закупка">${eur(sumCost)}</td><td></td><td></td><td class="n" data-label="Выручка">${rub(sumRev)}</td><td></td></tr></tfoot></table></div>`;
+}
+function viewItems(){
+  const f = S.f, {I} = C, q = f.itQ.trim().toLowerCase();
+  let items = [...S.items.values()].filter(it => {
+    const st = I.get(it.id);
+    if (f.itSt==="instock" ? st.remaining===0 : (f.itSt!=="all" && st.status!==f.itSt)) return false;
+    if (f.itCat!=="all" && (it.cat||"Прочее")!==f.itCat) return false;
+    if (f.itBox!=="all" && it.boxId!==f.itBox) return false;
+    if (q && ![it.name, it.note, boxName(it.boxId)].join(" ").toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const bOrder = new Map(boxesSorted().map((b,i)=>[b.id,i]));
+  const key = {name: it=>it.name.toLowerCase(), cat: it=>it.cat||"", box: it=>(bOrder.get(it.boxId)??999)*1e5+(it.row||0), rem: it=>I.get(it.id).remaining,
+               cost: it=>+it.costEur||0, price: it=>+it.priceRub||0, status: it=>I.get(it.id).status, rev: it=>I.get(it.id).rev}[f.itSort] || (it=>it.name);
+  items.sort((a,b) => { const x=key(a), y=key(b); return (x<y?-1:x>y?1:0)*f.itDir; });
+  const opt = (arr, cur) => arr.map(([v,l]) => `<option value="${esc(v)}" ${cur===v?"selected":""}>${esc(l)}</option>`).join("");
+  return topbar("Товары", "Все предметы из всех посылок. Нажмите на строку, чтобы открыть карточку: продажи, изменение, перенос в другую посылку.",
+      `<button class="btn primary w" data-act="item-new">+ Товар</button>`) +
+    `<div class="toolbar">
+      <input class="grow" type="search" id="itQ" data-filter="itQ" placeholder="Поиск по названию, заметке, посылке" value="${esc(f.itQ)}">
+      <select id="itSt" data-filter="itSt" aria-label="Статус">${opt([["all","Все статусы"],["instock","Есть на складе"],["stock","В продаже"],["partial","Частично продано"],["sold","Продано"],["broken","Бой"],["gift","Подарок"]], f.itSt)}</select>
+      <select id="itCat" data-filter="itCat" aria-label="Категория">${opt([["all","Все категории"], ...CATS.map(c=>[c,c])], f.itCat)}</select>
+      <select id="itBox" data-filter="itBox" aria-label="Посылка">${opt([["all","Все посылки"], ...boxesSorted().map(b=>[b.id,b.name])], f.itBox)}</select>
+    </div>` + itemsTable(items);
+}
+
+/* ============================== sales ============================== */
+function allSales(){
+  const out = [];
+  for (const it of S.items.values()) for (const s of (it.sales||[])) out.push({it, s, d: s.date || s.paidDate || ""});
+  return out;
+}
+function viewSales(){
+  const f = S.f, q = f.saQ.trim().toLowerCase();
+  const all = allSales();
+  const months = [...new Set(all.map(x=>x.d.slice(0,7)).filter(Boolean))].sort().reverse();
+  const list = all.filter(({it, s, d}) => {
+    if (f.saPaid==="unpaid" && (s.paid || s.channel==="broken" || s.channel==="gift")) return false;
+    if (f.saPaid==="paid" && !s.paid) return false;
+    if (f.saCh!=="all" && s.channel!==f.saCh) return false;
+    if (f.saMonth==="none" && d) return false;
+    if (f.saMonth!=="all" && f.saMonth!=="none" && d.slice(0,7)!==f.saMonth) return false;
+    if (q && ![it.name, s.note, boxName(it.boxId)].join(" ").toLowerCase().includes(q)) return false;
+    return true;
+  }).sort((a,b) => (b.d||"0").localeCompare(a.d||"0") || a.it.name.localeCompare(b.it.name,"ru"));
+  let tA=0, tE=0, tQ=0;
+  const rows = list.map(({it, s, d}) => {
+    tA+=+s.amount||0; tE+=+s.expenses||0; tQ+=+s.qty||0;
+    const special = s.channel==="broken" || s.channel==="gift";
+    return `<tr>
+      <td class="n" style="text-align:left" data-label="Дата">${d?fdate(d):`<span class="muted">без даты</span>`}</td>
+      <td class="c-main"><div class="t-name"><a href="#" data-act="item-open" data-id="${esc(it.id)}" style="color:inherit">${esc(it.name)}</a></div>${s.note?`<div class="t-note">${esc(s.note)}</div>`:""}</td>
+      <td data-label="Посылка"><a href="#box-${esc(it.boxId)}">${esc(boxName(it.boxId))}</a></td>
+      <td class="n" data-label="Количество">${s.qty||0} шт</td>
+      <td data-label="Канал">${special?pill(s.channel==="broken"?"bad":"neutral", s.channel==="broken"?"✕":"♥", CH[s.channel]):esc(CH[s.channel]||"Другое")}${s.method?`<div class="t-note">${esc(METHOD[s.method]||s.method)}</div>`:""}</td>
+      <td class="n" data-label="Сумма">${special?"—":rub(s.amount)}</td>
+      <td class="n" data-label="Расходы">${s.expenses?rub(s.expenses):"—"}</td>
+      <td class="n" data-label="Чистыми">${special?"—":rub((+s.amount||0)-(+s.expenses||0))}</td>
+      <td data-label="Оплата">${special?"—":paidPill(s)}</td>
+      <td class="c-act"><div class="row-actions">${!s.paid&&!special?`<button class="btn sm w" data-act="sale-paid" data-item="${esc(it.id)}" data-sale="${esc(s.id)}">Оплачено</button>`:""}<button class="btn sm ghost w" data-act="sale-edit" data-item="${esc(it.id)}" data-sale="${esc(s.id)}">Изменить</button></div></td>
+    </tr>`;
+  }).join("");
+  const opt = (arr, cur) => arr.map(([v,l]) => `<option value="${esc(v)}" ${cur===v?"selected":""}>${esc(l)}</option>`).join("");
+  const chips = [["all","Все"],["unpaid",`Ждут оплаты · ${C.T.unpaidN}`],["paid","Оплачено"]]
+    .map(([k,l]) => `<button class="chip" data-act="set" data-key="saPaid" data-val="${k}" aria-pressed="${f.saPaid===k}">${l}</button>`).join("");
+  return topbar("Продажи", "Каждая продажа привязана к товару. Неоплаченные (например, магазин ещё не отдал деньги) отмечайте кнопкой «Оплачено», когда получите деньги.",
+      `<button class="btn primary w" data-act="sale-new">+ Продажа</button>`) +
+    `<div class="toolbar"><div class="chips">${chips}</div>
+      <input class="grow" type="search" id="saQ" data-filter="saQ" placeholder="Поиск по товару, заметке" value="${esc(f.saQ)}">
+      <select id="saCh" data-filter="saCh" aria-label="Канал">${opt([["all","Все каналы"],["shop","Магазин"],["avito","Авито"],["other","Другое"],["broken","Бой"],["gift","Подарок"]], f.saCh)}</select>
+      <select id="saMonth" data-filter="saMonth" aria-label="Месяц">${opt([["all","Все месяцы"], ...months.map(m=>[m, monthLabel(m)]), ["none","Без даты"]], f.saMonth)}</select>
+    </div>` +
+    (list.length ? `<div class="tablewrap"><table class="rs"><thead><tr><th>Дата</th><th>Товар</th><th>Посылка</th><th class="n">Шт</th><th>Канал</th><th class="n">Сумма</th><th class="n">Расходы</th><th class="n">Чистыми</th><th>Оплата</th><th></th></tr></thead>
+      <tbody>${rows}</tbody><tfoot><tr><td class="c-main" colspan="3">${list.length} ${plural(list.length,"запись","записи","записей")}</td><td class="n" data-label="Штук">${tQ}</td><td></td><td class="n" data-label="Сумма">${rub(tA)}</td><td class="n" data-label="Расходы">${rub(tE)}</td><td class="n" data-label="Чистыми">${rub(tA-tE)}</td><td colspan="2"></td></tr></tfoot></table></div>`
+      : `<div class="card empty">Продаж с такими условиями нет.</div>`);
+}
+
+/* ============================== finance ============================== */
+function viewFinance(){
+  const {T} = C, f = S.f;
+  const stmt = `<section class="card"><div class="card-h"><h2>Финансовый результат</h2><span class="hint">за всё время, ₽</span></div><div class="stmt">
+    <div><span>Выручка от продаж</span><span>${rub(T.rev)}</span></div>
+    <div class="ind"><span>− расходы на продажу (доставка Авито, комиссии)</span><span>${rub(-T.exp)}</span></div>
+    <div class="tot"><span>Чистая выручка</span><span>${rub(T.net)}</span></div>
+    <div class="ind"><span>− себестоимость проданного, бой и подарки (${eur(T.cogsEur)})</span><span>${rub(-T.cogsEur*T.rate)}</span></div>
+    <div class="tot"><span>Прибыль по проданному</span><span class="${T.gross>=0?"pos":"neg"}">${rub(T.gross)}</span></div>
+    <div class="ind"><span>− прочие расходы из журнала</span><span>${rub(-T.otherExp)}</span></div>
+    <div class="ind"><span>+ прочие доходы из журнала</span><span>${rub(T.otherInc)}</span></div>
+    <div class="tot"><span>Итоговая прибыль</span><span class="${T.profit>=0?"pos":"neg"}">${rub(T.profit)}</span></div>
+  </div></section>`;
+  const inv = `<section class="card"><div class="card-h"><h2>Вложения и склад</h2><span class="hint">себестоимость = закупка + доля доставки посылки</span></div><div class="stmt">
+    <div><span>Закупка товаров</span><span>${eur(T.itemsEur)}</span></div>
+    <div><span>Доставка и прочие расходы посылок</span><span>${eur(T.shipEur)}</span></div>
+    <div class="tot"><span>Всего вложено</span><span>${eur(T.invEur)} <span class="muted small">≈ ${rub(T.invEur*T.rate)}</span></span></div>
+    <div><span>Склад по себестоимости (${n0(T.stockQty)} шт)</span><span>${eur(T.stockCostEur)}</span></div>
+    <div><span>Склад по ценам продажи</span><span>${rub(T.stockValue)}</span></div>
+    <div><span>Потери: бой и подарки по себестоимости</span><span>${eur(T.lostEur)}</span></div>
+  </div></section>`;
+  const money = `<section class="card"><div class="card-h"><h2>Деньги</h2><span class="hint">сверка с журналом</span></div><div class="stmt">
+    <div><span>Получено от покупателей (оплаченные продажи)</span><span>${rub(T.paidRev)}</span></div>
+    <div><span>Ждёт оплаты</span><span>${rub(T.unpaid)}</span></div>
+    <div><span>Продажи через магазин, отмеченные оплаченными</span><span>${rub(T.shopPaid)}</span></div>
+    <div><span>Выплаты магазина по журналу</span><span>${rub(T.shopPayout)}</span></div>
+    <div class="tot"><span>Получено в евро (обмен)</span><span>${eur(T.exchEur)}</span></div>
+  </div></section>`;
+  // monthly
+  const ms = Object.keys(T.months).sort().slice(-12);
+  let monthly = "";
+  if (ms.length){
+    const mx = Math.max(...ms.map(m=>T.months[m])), sc = niceScale(mx, 4), top = ms.reduce((a,m)=>T.months[m]>T.months[a]?m:a, ms[0]);
+    monthly = `<section class="card"><div class="card-h"><h2>Выручка по месяцам</h2><span class="hint">по дате продажи или оплаты · без даты: ${T.undated} ${plural(T.undated,"продажа","продажи","продаж")}</span></div>
+      <div class="cols" style="--gridbg-h:repeating-linear-gradient(to top, var(--grid) 0 1px, transparent 1px calc(100% / ${sc.n}))">${ms.map(m => { const h = T.months[m]/sc.max*100;
+        return `<div class="c" data-tip="${esc(monthLabel(m)+"\n"+rub(T.months[m]))}" tabindex="0" aria-label="${esc(monthLabel(m)+": "+rub(T.months[m]))}">${m===top?`<span class="cap" style="bottom:calc(${h}% + 4px)">${compact(T.months[m])}</span>`:""}<i style="height:${h}%"></i></div>`; }).join("")}</div>
+      <div class="cols-l">${ms.map(m=>`<span>${monthLabel(m)}</span>`).join("")}</div></section>`;
+  }
+  // ledger
+  const led = [...S.ledger.values()].filter(l => f.leType==="all" || l.type===f.leType).sort((a,b)=>(b.date||"0").localeCompare(a.date||"0"));
+  const ledRows = led.map(l => `<tr>
+      <td data-label="Дата">${l.date?fdate(l.date):`<span class="muted">без даты</span>`}</td>
+      <td class="c-main">${pill(LTYPE[l.type]?LTYPE[l.type][1]:"neutral", "", LTYPE[l.type]?LTYPE[l.type][0]:l.type)}</td>
+      <td class="n" data-label="Сумма">${l.currency==="EUR"?eur(l.amount):rub(l.amount)}</td>
+      <td data-label="Способ">${esc(METHOD[l.method]||l.method||"—")}</td>
+      <td class="muted" data-label="Комментарий">${esc(l.note||"")}${l.boxId&&S.boxes.get(l.boxId)?` · <a href="#box-${esc(l.boxId)}">${esc(boxName(l.boxId))}</a>`:""}</td>
+      <td class="c-act"><div class="row-actions"><button class="btn sm ghost w" data-act="led-edit" data-id="${esc(l.id)}">Изменить</button></div></td></tr>`).join("");
+  const sumE = led.filter(l=>l.currency==="EUR").reduce((a,l)=>a+(+l.amount||0),0), sumR = led.filter(l=>l.currency!=="EUR").reduce((a,l)=>a+(+l.amount||0),0);
+  const tchips = [["all","Все"], ...Object.entries(LTYPE).map(([k,v])=>[k,v[0]])].map(([k,l]) => `<button class="chip" data-act="set" data-key="leType" data-val="${k}" aria-pressed="${f.leType===k}">${esc(l)}</button>`).join("");
+  const journal = `<section class="card" style="margin-top:16px"><div class="card-h"><h2>Журнал операций</h2><div class="actions"><button class="btn primary w" data-act="led-new">+ Операция</button></div></div>
+    <p class="muted small" style="margin:-4px 0 12px;max-width:80ch">Сюда записываются движения денег, которые не являются продажей товара: получение евро (обмен), выплаты магазина, прочие расходы (такси, упаковка, ЖКХ) и доходы. Выплаты магазина и обмен не меняют прибыль — они для сверки.</p>
+    <div class="toolbar"><div class="chips">${tchips}</div></div>
+    ${led.length?`<div class="tablewrap"><table class="rs"><thead><tr><th>Дата</th><th>Тип</th><th class="n">Сумма</th><th>Способ</th><th>Комментарий</th><th></th></tr></thead><tbody>${ledRows}</tbody>
+      <tfoot><tr><td class="c-main" colspan="2">${led.length} ${plural(led.length,"операция","операции","операций")}</td><td class="n" data-label="Итого">${sumE?eur(sumE):""}${sumE&&sumR?"<br>":""}${sumR?rub(sumR):""}</td><td colspan="3"></td></tr></tfoot></table></div>`:`<div class="empty">Операций нет.</div>`}
+  </section>`;
+  const rateCard = `<section class="card"><div class="card-h"><h2>Курс евро</h2><span class="hint">для пересчёта себестоимости в рубли</span></div>
+    <form data-form="rate" class="toolbar" style="margin:0"><input type="number" step="0.01" min="1" id="rateIn" value="${esc(S.settings.rate||91)}" aria-label="Курс, рублей за евро" style="width:120px"><span class="muted">₽ за 1 €</span><button class="btn w" type="submit">Сохранить</button></form>
+    ${S.settings.rateNote?`<div class="hintline" style="margin-top:8px">${esc(S.settings.rateNote)}</div>`:""}
+    <div class="toolbar" style="margin:14px 0 0">${S.dl?`<span class="muted small">Скачать CSV:</span><button class="btn sm" data-act="csv" data-what="items">Товары</button><button class="btn sm" data-act="csv" data-what="sales">Продажи</button><button class="btn sm" data-act="csv" data-what="ledger">Журнал</button><button class="btn sm" data-act="csv" data-what="boxes">Посылки</button>`:""}</div>
+    ${window.__store?`<div class="toolbar" style="margin:10px 0 0"><span class="muted small">Резервная копия:</span><button class="btn sm" data-act="backup">Скачать JSON</button><label class="btn sm w" for="restoreIn">Загрузить из JSON</label><input type="file" id="restoreIn" accept=".json,application/json" hidden></div>`:""}
+    ${(S.settings.importNotes||[]).length?`<details class="notes" style="margin-top:12px"><summary>Заметки из Excel, которые не удалось разобрать автоматически</summary><ul>${S.settings.importNotes.map(n=>`<li>${esc(n)}</li>`).join("")}</ul></details>`:""}
+  </section>`;
+  return topbar("Бухгалтерия", "Итоги считаются автоматически из продаж, посылок и журнала операций.") +
+    `<div class="grid2">${stmt}<div class="stack">${inv}${money}</div></div><div class="grid2">${monthly}${rateCard}</div>` + journal;
+}
+
+/* ============================== modals ============================== */
+function openModal(title, body, opts={}){
+  const root = document.getElementById("modal-root");
+  root.innerHTML = `<div class="overlay" data-act="modal-bg"><form class="modal" role="dialog" aria-modal="true" aria-label="${esc(title)}" id="mform" novalidate>
+    <header><h2>${esc(title)}</h2><button type="button" class="btn ghost sm" data-act="modal-close" aria-label="Закрыть">✕</button></header>
+    <div class="body">${body}</div>
+    <footer>${opts.left||""}<div class="r"><button type="button" class="btn" data-act="modal-close">${opts.submit===false?"Закрыть":"Отмена"}</button>${opts.submit===false?"":`<button type="submit" class="btn primary">${esc(opts.submit||"Сохранить")}</button>`}</div></footer>
+  </form></div>`;
+  const form = document.getElementById("mform");
+  form.onsubmit = async e => { e.preventDefault(); if (!opts.onSubmit) return closeModal();
+    const btn = form.querySelector('[type=submit]'); if (btn) btn.disabled = true;
+    try { const r = await opts.onSubmit(form); if (r!==false) closeModal(); } catch(err){ /* toast already shown */ } finally { if (btn) btn.disabled = false; } };
+  if (opts.onMount) opts.onMount(form);
+  const first = form.querySelector("input:not([type=hidden]),select,textarea"); if (first) first.focus();
+}
+function closeModal(){ document.getElementById("modal-root").innerHTML = ""; }
+function confirmBox(title, text, okLabel, onOk){
+  openModal(title, `<p style="margin:0">${text}</p>`, {submit: okLabel, onSubmit: async () => { await onOk(); }});
+}
+const val = (form, id) => { const el = form.querySelector("#"+id); return el ? (el.type==="checkbox" ? el.checked : el.value.trim()) : ""; };
+const numv = (form, id) => { const v = val(form, id).replace(",", "."); return v==="" ? 0 : +v; };
+const field = (id, label, input, cls="") => `<div class="field ${cls}"><label for="${id}">${label}</label>${input}</div>`;
+const options = (arr, cur) => arr.map(([v,l]) => `<option value="${esc(v)}" ${String(cur)===String(v)?"selected":""}>${esc(l)}</option>`).join("");
+
+/* ----- box form ----- */
+function boxForm(b){
+  const isNew = !b; b = b || {status:"packing", shippingEur:67};
+  const couriers = [...new Set([...S.boxes.values()].map(x=>x.courier).filter(Boolean))];
+  openModal(isNew ? "Новая посылка" : "Изменить посылку", `<div class="fgrid">
+    ${field("f-bname","Название",`<input type="text" id="f-bname" required value="${esc(b.name||"")}" placeholder="Например: Ольга 03.12">`,"full")}
+    ${field("f-courier","Курьер / способ",`<input type="text" id="f-courier" list="dl-cour" value="${esc(b.courier||"")}"><datalist id="dl-cour">${couriers.map(c=>`<option value="${esc(c)}">`).join("")}</datalist>`)}
+    ${field("f-status","Статус",`<select id="f-status">${options(Object.entries(BOX_ST).map(([k,v])=>[k,v[0]]), b.status)}</select>`)}
+    ${field("f-sent","Дата отправки",`<input type="date" id="f-sent" value="${esc(b.sentDate||"")}">`)}
+    ${field("f-arr","Дата доставки",`<input type="date" id="f-arr" value="${esc(b.arrivedDate||"")}">`)}
+    ${field("f-weight","Вес, кг",`<input type="number" step="0.1" min="0" id="f-weight" value="${esc(b.weightKg??"")}">`)}
+    ${field("f-track","Трек-номер",`<input type="text" id="f-track" value="${esc(b.tracking||"")}">`)}
+    ${field("f-ship","Доставка, €",`<input type="number" step="0.01" min="0" id="f-ship" value="${esc(b.shippingEur??0)}">`)}
+    ${field("f-extra","Прочие расходы, €",`<input type="number" step="0.01" min="0" id="f-extra" value="${esc(b.extraEur??0)}">`)}
+    ${field("f-bnote","Заметка",`<textarea id="f-bnote">${esc(b.note||"")}</textarea>`,"full")}
+  </div>`, {onSubmit: async form => {
+    const name = val(form,"f-bname"); if (!name){ toast("Укажите название посылки", true); return false; }
+    const maxOrder = Math.max(0, ...[...S.boxes.values()].map(x=>+x.order||0));
+    const doc = Object.assign({}, b, {name, courier:val(form,"f-courier"), status:val(form,"f-status"), sentDate:val(form,"f-sent"), arrivedDate:val(form,"f-arr"),
+      weightKg: val(form,"f-weight")===""?null:numv(form,"f-weight"), tracking:val(form,"f-track"), shippingEur:numv(form,"f-ship"), extraEur:numv(form,"f-extra"), note:val(form,"f-bnote")});
+    if (isNew){ doc.order = maxOrder+1; doc.createdAt = new Date().toISOString(); }
+    const id = await saveDoc("boxes", isNew?null:b.id, doc);
+    toast(isNew ? "Посылка создана" : "Посылка сохранена");
+    if (isNew) location.hash = "box-"+id;
+  }});
+}
+
+/* ----- item form ----- */
+function itemForm(it, presetBox){
+  const isNew = !it; it = it || {qty:1, costEur:0, priceRub:0, cat:"Прочее", boxId: presetBox || (boxesSorted().find(b=>b.status==="packing")||{}).id || ""};
+  openModal(isNew ? "Новый товар" : "Изменить товар", `<div class="fgrid">
+    ${field("f-name","Название",`<input type="text" id="f-name" required value="${esc(it.name||"")}" placeholder="Например: Ваза Delft с крышкой">`,"full")}
+    ${field("f-box","Посылка",`<select id="f-box">${options([["","— без посылки —"], ...boxesSorted().map(b=>[b.id, b.name+" · "+BOX_ST[b.status||"arrived"][0]])], it.boxId)}</select>`)}
+    ${field("f-cat","Категория",`<select id="f-cat">${options(CATS.map(c=>[c,c]), it.cat||"Прочее")}</select>`)}
+    ${field("f-qty","Количество, шт",`<input type="number" min="0" step="1" id="f-qty" value="${esc(it.qty??1)}">`)}
+    ${field("f-cost","Закупка всего, €",`<input type="number" min="0" step="0.01" id="f-cost" value="${esc(it.costEur??0)}">`)}
+    ${field("f-price","Цена продажи за шт, ₽",`<input type="number" min="0" step="1" id="f-price" value="${esc(it.priceRub??0)}">`)}
+    ${field("f-added","Дата поступления",`<input type="date" id="f-added" value="${esc(it.added||"")}">`)}
+    ${field("f-note","Заметка",`<textarea id="f-note">${esc(it.note||"")}</textarea>`,"full")}
+    ${it.row?`<div class="hintline full">Строка в исходном Excel: ${it.row}</div>`:""}
+  </div>`, {onSubmit: async form => {
+    const name = val(form,"f-name"); if (!name){ toast("Укажите название товара", true); return false; }
+    const doc = Object.assign({}, it, {name, boxId:val(form,"f-box"), cat:val(form,"f-cat"), qty:Math.max(0,Math.round(numv(form,"f-qty"))), costEur:numv(form,"f-cost"),
+      priceRub:numv(form,"f-price"), added:val(form,"f-added"), note:val(form,"f-note")});
+    if (!doc.sales) doc.sales = [];
+    if (isNew) doc.createdAt = new Date().toISOString();
+    await saveDoc("items", isNew?null:it.id, doc);
+    toast(isNew ? "Товар добавлен" : "Товар сохранён");
+  }});
+}
+
+/* ----- item card ----- */
+function itemCard(id){
+  const it = S.items.get(id); if (!it) return;
+  const st = C.I.get(id);
+  const sales = (it.sales||[]).map(s => {
+    const special = s.channel==="broken" || s.channel==="gift";
+    return `<div><div><b>${special?CH[s.channel]:rub(s.amount)}</b> <span class="muted">· ${s.qty} шт · ${esc(special?"":CH[s.channel]||"Другое")}${s.expenses?` · расходы ${rub(s.expenses)}`:""}${(s.date||s.paidDate)?` · ${fdate(s.date||s.paidDate)}`:""}</span>${s.note?`<div class="t-note">${esc(s.note)}</div>`:""}</div>
+      <div class="row-actions">${special?"":paidPill(s)}${!s.paid&&!special?`<button type="button" class="btn sm w" data-act="sale-paid" data-item="${esc(id)}" data-sale="${esc(s.id)}">Оплачено</button>`:""}<button type="button" class="btn sm ghost w" data-act="sale-edit" data-item="${esc(id)}" data-sale="${esc(s.id)}">Изменить</button></div></div>`;
+  }).join("");
+  const info = [["Посылка", `<a href="#box-${esc(it.boxId)}" data-act="modal-close">${esc(boxName(it.boxId))}</a>`],["Категория", esc(it.cat||"Прочее")],["Остаток / всего", `${st.remaining} / ${st.qty} шт`],
+    ["Закупка", eur(it.costEur)],["Себестоимость с доставкой", eur(st.landed)],["Цена за шт", it.priceRub?rub(it.priceRub):"—"],
+    ["Выручка чистыми", rub(st.net)],["Прибыль", `<span class="${st.net-st.cogsEur*C.T.rate>=0?"pos":"neg"}">${rub(st.net - st.cogsEur*C.T.rate)}</span>`],["Поступил", fdate(it.added)]]
+    .map(([k,v]) => `<div><span>${k}</span><b>${v}</b></div>`).join("");
+  openModal(it.name, `<div>${itemPill(st.status)}</div><div class="info-grid">${info}</div>${it.note?`<div class="muted">${esc(it.note)}</div>`:""}
+    <div><h3 style="margin-bottom:8px">Продажи и списания</h3>${sales?`<div class="slist">${sales}</div>`:`<div class="muted">Пока не продавался.</div>`}</div>`,
+    {submit:false, left:`<div class="actions">${st.remaining>0?`<button type="button" class="btn primary w" data-act="sale-new" data-item="${esc(id)}">Продать</button>`:""}<button type="button" class="btn w" data-act="item-edit" data-id="${esc(id)}">Изменить</button><button type="button" class="btn danger w" data-act="item-del" data-id="${esc(id)}">Удалить</button></div>`});
+}
+
+/* ----- sale form ----- */
+function saleForm(itemId, saleId){
+  const it = itemId ? S.items.get(itemId) : null;
+  const s0 = it && saleId ? (it.sales||[]).find(x=>x.id===saleId) : null;
+  const isNew = !s0;
+  const st = it ? C.I.get(it.id) : null;
+  const avail = [...S.items.values()].filter(x => C.I.get(x.id).remaining > 0).sort((a,b)=>a.name.localeCompare(b.name,"ru"));
+  const remaining = st ? st.remaining + (s0 ? (+s0.qty||0) : 0) : 1;
+  const s = s0 || {qty: Math.min(1, remaining) || 1, amount: it ? (+it.priceRub||0) : 0, expenses:0, channel:"shop", paid:false, date:today(), method:""};
+  const itemSel = it ? `<div class="full"><b>${esc(it.name)}</b> <span class="muted">· ${esc(boxName(it.boxId))} · доступно ${remaining} шт</span></div>`
+    : field("f-item","Товар",`<select id="f-item" required><option value="">— выберите товар —</option>${avail.map(x=>`<option value="${esc(x.id)}" data-price="${+x.priceRub||0}">${esc(x.name)} · ${esc(boxName(x.boxId))} · ост. ${C.I.get(x.id).remaining}</option>`).join("")}</select>`,"full");
+  openModal(isNew ? "Новая продажа" : "Изменить продажу", `<div class="fgrid">
+    ${itemSel}
+    ${field("f-channel","Канал",`<select id="f-channel">${options(Object.entries(CH), s.channel)}</select>`)}
+    ${field("f-date","Дата продажи",`<input type="date" id="f-date" value="${esc(s.date||"")}">`)}
+    ${field("f-sqty","Количество, шт",`<input type="number" min="1" step="1" id="f-sqty" value="${esc(s.qty||1)}">`)}
+    ${field("f-amount","Сумма продажи, ₽",`<input type="number" min="0" step="1" id="f-amount" value="${esc(s.amount??0)}">`)}
+    ${field("f-exp","Расходы на продажу, ₽",`<input type="number" min="0" step="1" id="f-exp" value="${esc(s.expenses??0)}">`)}
+    ${field("f-method","Способ оплаты",`<select id="f-method">${options([["","—"],["cash","Наличные"],["card","Карта"],["other","Другое"]], s.method||"")}</select>`)}
+    <div class="field"><label>&nbsp;</label><label class="check"><input type="checkbox" id="f-paid" ${s.paid?"checked":""}> Деньги получены</label></div>
+    ${field("f-pdate","Дата оплаты",`<input type="date" id="f-pdate" value="${esc(s.paidDate||"")}">`)}
+    ${field("f-snote","Заметка",`<input type="text" id="f-snote" value="${esc(s.note||"")}" placeholder="Покупатель, детали">`,"full")}
+    <div class="hintline full">«Бой» и «Подарок» списывают товар со склада без выручки.</div>
+  </div>`, {
+    left: isNew ? "" : `<button type="button" class="btn danger w" data-act="sale-del" data-item="${esc(itemId)}" data-sale="${esc(saleId)}">Удалить продажу</button>`,
+    onMount: form => {
+      const ch = form.querySelector("#f-channel"), paid = form.querySelector("#f-paid"), pd = form.querySelector("#f-pdate");
+      const sync = () => { const sp = ch.value==="broken"||ch.value==="gift"; ["f-amount","f-exp","f-method","f-paid","f-pdate"].forEach(i=>{ form.querySelector("#"+i).disabled = sp; }); };
+      ch.addEventListener("change", sync); sync();
+      paid.addEventListener("change", () => { if (paid.checked && !pd.value) pd.value = today(); });
+      const sel = form.querySelector("#f-item"), q = form.querySelector("#f-sqty"), amt = form.querySelector("#f-amount");
+      if (sel) sel.addEventListener("change", () => { const o = sel.selectedOptions[0]; if (o && o.dataset.price) amt.value = (+o.dataset.price) * (+q.value||1); });
+      if (isNew && it) q.addEventListener("input", () => { amt.value = (+it.priceRub||0) * (+q.value||1); });
+    },
+    onSubmit: async form => {
+      const target = it || S.items.get(val(form,"f-item"));
+      if (!target){ toast("Выберите товар", true); return false; }
+      const tst = C.I.get(target.id);
+      const maxQ = tst.remaining + (s0 ? (+s0.qty||0) : 0);
+      const qty = Math.max(1, Math.round(numv(form,"f-sqty")));
+      if (qty > maxQ){ toast(`Можно продать не больше ${maxQ} шт`, true); return false; }
+      const channel = val(form,"f-channel"), special = channel==="broken"||channel==="gift";
+      const sale = {id: s0 ? s0.id : "s"+Date.now().toString(36)+Math.random().toString(36).slice(2,5), qty, channel, date: val(form,"f-date")};
+      if (special){ Object.assign(sale, {amount:0, expenses:0, paid:true}); }
+      else { const paidV = val(form,"f-paid"); Object.assign(sale, {amount:numv(form,"f-amount"), expenses:numv(form,"f-exp"), method:val(form,"f-method"), paid:paidV, paidDate: paidV ? (val(form,"f-pdate")||today()) : ""}); }
+      const note = val(form,"f-snote"); if (note) sale.note = note;
+      for (const k of Object.keys(sale)) if (sale[k]==="") delete sale[k];
+      const sales = s0 ? (target.sales||[]).map(x => x.id===s0.id ? sale : x) : (target.sales||[]).concat([sale]);
+      await saveDoc("items", target.id, Object.assign({}, target, {sales}));
+      toast(isNew ? "Продажа записана" : "Продажа сохранена");
+    }});
+}
+async function markPaid(itemId, saleId){
+  const it = S.items.get(itemId); if (!it) return;
+  const sales = (it.sales||[]).map(s => s.id===saleId ? Object.assign({}, s, {paid:true, paidDate: s.paidDate || today()}) : s);
+  await saveDoc("items", itemId, Object.assign({}, it, {sales}));
+  toast("Отмечено как оплачено");
+}
+
+/* ----- ledger form ----- */
+function ledgerForm(l){
+  const isNew = !l; l = l || {type:"exchange", currency:"EUR", date:today(), method:"card", amount:""};
+  openModal(isNew ? "Новая операция" : "Изменить операцию", `<div class="fgrid">
+    ${field("f-ltype","Тип",`<select id="f-ltype">${options(Object.entries(LTYPE).map(([k,v])=>[k,v[0]]), l.type)}</select>`)}
+    ${field("f-ldate","Дата",`<input type="date" id="f-ldate" value="${esc(l.date||"")}">`)}
+    ${field("f-lamount","Сумма",`<input type="number" min="0" step="0.01" id="f-lamount" value="${esc(l.amount)}" required>`)}
+    ${field("f-lcur","Валюта",`<select id="f-lcur">${options([["EUR","€ евро"],["RUB","₽ рубли"]], l.currency)}</select>`)}
+    ${field("f-lmethod","Способ",`<select id="f-lmethod">${options([["",""],["cash","Наличные"],["card","Карта"],["other","Другое"]], l.method||"")}</select>`)}
+    ${field("f-lbox","Посылка (необязательно)",`<select id="f-lbox">${options([["","—"], ...boxesSorted().map(b=>[b.id,b.name])], l.boxId||"")}</select>`)}
+    ${field("f-lnote","Комментарий",`<input type="text" id="f-lnote" value="${esc(l.note||"")}">`,"full")}
+  </div>`, {
+    left: isNew ? "" : `<button type="button" class="btn danger w" data-act="led-del" data-id="${esc(l.id)}">Удалить</button>`,
+    onMount: form => { const t=form.querySelector("#f-ltype"), c=form.querySelector("#f-lcur"); t.addEventListener("change", ()=>{ c.value = t.value==="exchange" ? "EUR" : "RUB"; }); },
+    onSubmit: async form => {
+      const amount = numv(form,"f-lamount"); if (!(amount>0)){ toast("Укажите сумму больше нуля", true); return false; }
+      const doc = Object.assign({}, l, {type:val(form,"f-ltype"), date:val(form,"f-ldate"), amount, currency:val(form,"f-lcur"), method:val(form,"f-lmethod"), note:val(form,"f-lnote"), boxId:val(form,"f-lbox")});
+      if (!doc.boxId) delete doc.boxId;
+      if (isNew) doc.createdAt = new Date().toISOString();
+      await saveDoc("ledger", isNew?null:l.id, doc);
+      toast(isNew ? "Операция добавлена" : "Операция сохранена");
+    }});
+}
+
+/* ============================== csv ============================== */
+function csv(rows){ return "﻿" + rows.map(r => r.map(v => { const s = String(v ?? ""); return /[;"\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s; }).join(";")).join("\r\n"); }
+async function exportCsv(what){
+  if (!S.dl) return;
+  let rows, name;
+  if (what==="items"){ name="товары.csv"; rows=[["Товар","Категория","Посылка","Кол-во","Остаток","Закупка €","Себестоимость с доставкой €","Цена за шт ₽","Статус","Выручка ₽","Расходы ₽","Заметка"]];
+    for (const it of S.items.values()){ const st=C.I.get(it.id); rows.push([it.name,it.cat,boxName(it.boxId),st.qty,st.remaining,it.costEur,st.landed.toFixed(2),it.priceRub,ITEM_ST[st.status][0],st.rev,st.exp,it.note||""]); } }
+  else if (what==="sales"){ name="продажи.csv"; rows=[["Дата","Дата оплаты","Товар","Посылка","Шт","Канал","Сумма ₽","Расходы ₽","Оплачено","Способ","Заметка"]];
+    for (const {it,s} of allSales()) rows.push([s.date||"",s.paidDate||"",it.name,boxName(it.boxId),s.qty,CH[s.channel]||s.channel,s.amount||0,s.expenses||0,s.paid?"да":"нет",METHOD[s.method]||"",s.note||""]); }
+  else if (what==="ledger"){ name="журнал.csv"; rows=[["Дата","Тип","Сумма","Валюта","Способ","Комментарий"]];
+    for (const l of S.ledger.values()) rows.push([l.date||"",LTYPE[l.type]?LTYPE[l.type][0]:l.type,l.amount,l.currency,METHOD[l.method]||l.method||"",l.note||""]); }
+  else { name="посылки.csv"; rows=[["Посылка","Курьер","Статус","Отправлена","Доставлена","Вес кг","Трек","Доставка €","Прочее €","Вложено €","Чистая выручка ₽","Окупаемость"]];
+    for (const b of boxesSorted()){ const s=C.B.get(b.id); rows.push([b.name,b.courier||"",BOX_ST[b.status]?BOX_ST[b.status][0]:b.status,b.sentDate||"",b.arrivedDate||"",b.weightKg??"",b.tracking||"",b.shippingEur||0,b.extraEur||0,s.invEur,s.net,pct(s.payback)]); } }
+  try { await S.dl.save({filename:name, data:csv(rows)}); }
+  catch(e){ if (e && e.code!=="declined") toast("Не удалось скачать файл", true); }
+}
+
+/* ============================== events ============================== */
+function toast(msg, err){
+  const t = document.getElementById("toast"), d = document.createElement("div");
+  d.textContent = msg; if (err) d.className = "err"; t.appendChild(d); setTimeout(()=>d.remove(), err?5000:2600);
+}
+document.addEventListener("click", async e => {
+  const a = e.target.closest("[data-act]"); if (!a) return;
+  if (a.dataset.stop) return;
+  const act = a.dataset.act, d = a.dataset;
+  if (e.target.closest("a[data-stop]")) return;
+  if (act==="modal-bg"){ if (e.target===a) closeModal(); return; }
+  if (act!=="go" && act!=="filter-unpaid" && a.tagName==="A" && a.getAttribute("href")==="#") e.preventDefault();
+  if (a.closest("tr[data-act]") && a !== a.closest("tr[data-act]")) e.stopPropagation();
+  switch (act){
+    case "go": location.hash = d.to; break;
+    case "set": S.f[d.key] = d.val; render(); break;
+    case "sort": if (S.f.itSort===d.key) S.f.itDir*=-1; else { S.f.itSort=d.key; S.f.itDir = ["rev","cost","price","rem"].includes(d.key) ? -1 : 1; } render(); break;
+    case "filter-unpaid": S.f.saPaid="unpaid"; S.f.saCh="all"; S.f.saMonth="all"; S.f.saQ=""; if (route()==="sales") render(); break;
+    case "modal-close": closeModal(); break;
+    case "box-new": boxForm(null); break;
+    case "box-edit": boxForm(S.boxes.get(d.id)); break;
+    case "box-ship": { const b=S.boxes.get(d.id); await saveDoc("boxes", b.id, Object.assign({}, b, {status:"transit", sentDate: b.sentDate||today()})); toast("Посылка отправлена"); break; }
+    case "box-arrive": { const b=S.boxes.get(d.id); await saveDoc("boxes", b.id, Object.assign({}, b, {status:"arrived", arrivedDate: b.arrivedDate||today()})); toast("Посылка доставлена"); break; }
+    case "box-del": {
+      const n = [...S.items.values()].filter(it=>it.boxId===d.id).length;
+      if (n){ openModal("Удалить посылку", `<p style="margin:0">В посылке ${n} ${plural(n,"товар","товара","товаров")}. Сначала перенесите их в другую посылку или удалите — так продажи не потеряются.</p>`, {submit:false}); break; }
+      confirmBox("Удалить посылку?", `Посылка «${esc(S.boxes.get(d.id).name)}» будет удалена без возможности восстановления.`, "Удалить", async () => { await delDoc("boxes", d.id); location.hash="boxes"; toast("Посылка удалена"); });
+      break; }
+    case "item-new": itemForm(null, d.box||""); break;
+    case "item-open": itemCard(d.id); break;
+    case "item-edit": itemForm(S.items.get(d.id)); break;
+    case "item-del": { const it=S.items.get(d.id);
+      confirmBox("Удалить товар?", `«${esc(it.name)}» и все его продажи (${(it.sales||[]).length}) будут удалены без возможности восстановления.`, "Удалить", async () => { await delDoc("items", d.id); toast("Товар удалён"); });
+      break; }
+    case "sale-new": saleForm(d.item||null, null); break;
+    case "sale-edit": saleForm(d.item, d.sale); break;
+    case "sale-paid": a.disabled = true; try { await markPaid(d.item, d.sale); if (document.getElementById("mform")) itemCard(d.item); } catch(err){} a.disabled = false; break;
+    case "sale-del": { const it=S.items.get(d.item);
+      confirmBox("Удалить продажу?", `Продажа товара «${esc(it.name)}» будет удалена, товар вернётся на склад.`, "Удалить", async () => {
+        await saveDoc("items", it.id, Object.assign({}, it, {sales:(it.sales||[]).filter(s=>s.id!==d.sale)})); toast("Продажа удалена"); });
+      break; }
+    case "led-new": ledgerForm(null); break;
+    case "led-edit": ledgerForm(S.ledger.get(d.id)); break;
+    case "led-del": confirmBox("Удалить операцию?", "Операция будет удалена из журнала без возможности восстановления.", "Удалить", async () => { await delDoc("ledger", d.id); toast("Операция удалена"); }); break;
+    case "csv": exportCsv(d.what); break;
+    case "lock": window.__store.lock(); break;
+    case "backup": if (S.dl) S.dl.save({filename:`uchet-vintazha-${today()}.json`, data: JSON.stringify(window.__store.exportAll(), null, 1)}); break;
+  }
+});
+let ft = 0;
+document.addEventListener("input", e => {
+  const el = e.target.closest("[data-filter]"); if (!el) return;
+  S.f[el.dataset.filter] = el.value; clearTimeout(ft); ft = setTimeout(render, el.tagName==="SELECT" ? 0 : 140);
+});
+document.addEventListener("submit", async e => {
+  const f = e.target.closest("form[data-form=rate]"); if (!f) return; e.preventDefault();
+  const r = +String(f.querySelector("#rateIn").value).replace(",", ".");
+  if (!(r>0)) { toast("Курс должен быть больше нуля", true); return; }
+  await saveDoc("meta", "settings", Object.assign({}, S.settings, {rate:r, rateNote:`Курс задан вручную ${fdate(today())}`}));
+  toast("Курс сохранён");
+});
+document.addEventListener("change", e => {
+  if (e.target.id !== "restoreIn" || !e.target.files.length) return;
+  const file = e.target.files[0]; e.target.value = "";
+  file.text().then(txt => {
+    let obj; try { obj = JSON.parse(txt); } catch(err){ toast("Файл не похож на резервную копию (ошибка JSON)", true); return; }
+    if (!obj || typeof obj!=="object" || (!obj.items && !obj.boxes)){ toast("В файле нет посылок и товаров", true); return; }
+    const n = Object.keys(obj.items||{}).length, b = Object.keys(obj.boxes||{}).length;
+    confirmBox("Заменить все данные?", `Текущие данные будут заменены содержимым файла «${esc(file.name)}»: ${b} посылок, ${n} товаров. Перед этим скачайте резервную копию, если она нужна.`, "Заменить", async () => {
+      try { await window.__store.importAll(obj); toast("Данные загружены"); } catch(err){ toast(errText(err), true); throw err; }
+    });
+  });
+});
+document.addEventListener("keydown", e => { if (e.key==="Escape" && document.getElementById("mform")) closeModal(); });
+const tip = document.getElementById("tip");
+document.addEventListener("pointermove", e => {
+  const t = e.target.closest && e.target.closest("[data-tip]");
+  if (!t){ tip.classList.remove("on"); return; }
+  tip.textContent = t.dataset.tip; tip.classList.add("on");
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = e.clientX + 14, y = e.clientY + 14;
+  if (x + w > innerWidth - 8) x = e.clientX - w - 14;
+  if (y + h > innerHeight - 8) y = e.clientY - h - 14;
+  tip.style.left = x+"px"; tip.style.top = y+"px";
+});
+document.addEventListener("focusin", e => { const t = e.target.closest && e.target.closest("[data-tip]"); if (t){ const r=t.getBoundingClientRect(); tip.textContent=t.dataset.tip; tip.classList.add("on"); tip.style.left=Math.min(r.left, innerWidth-tip.offsetWidth-8)+"px"; tip.style.top=(r.bottom+6)+"px"; } });
+document.addEventListener("focusout", () => tip.classList.remove("on"));
+let tipT = 0;
+document.addEventListener("click", e => {
+  if (!matchMedia("(hover: none)").matches) return;
+  const t = e.target.closest && e.target.closest("[data-tip]"); if (!t) return;
+  tip.textContent = t.dataset.tip; tip.classList.add("on");
+  const r = t.getBoundingClientRect();
+  tip.style.left = Math.max(8, Math.min(r.left, innerWidth - tip.offsetWidth - 8)) + "px";
+  tip.style.top = Math.max(8, r.top - tip.offsetHeight - 8) + "px";
+  clearTimeout(tipT); tipT = setTimeout(() => tip.classList.remove("on"), 2600);
+});
+window.addEventListener("hashchange", () => { closeModal(); render(); window.scrollTo(0,0); });
+
+render();
+init();
+</script>
+</body>
+</html>
