@@ -522,7 +522,7 @@ function render(){
   b.innerHTML = S.status==="nodb" ? `<div class="banner err">Хранилище данных недоступно. Проверьте, что сервер запущен, и обновите страницу.</div>`
     : S.status==="error" ? `<div class="banner err">Ошибка загрузки данных (${esc(S.err && S.err.code || "unknown")}). Обновите страницу позже.</div>`
     : S.status==="slow" ? `<div class="banner">Нет ответа от базы данных — показанные данные могут быть неактуальны.</div>`
-    : (window.__store && window.__store.mode==="local") ? `<div class="banner">Локальный режим: данные хранятся только в этом браузере. Регулярно скачивайте резервную копию (Бухгалтерия → Резервная копия).</div>` : "";
+    : syncBanner();
   const v = document.getElementById("view");
   const r = route();
   const haveData = S.boxes.size || S.items.size || S.ledger.size;
@@ -544,6 +544,18 @@ const NAV_ICONS = {
   sales:'<path d="M5 2.5h10v15l-2.5-1.5-2.5 1.5-2.5-1.5L5 17.5z"/><path d="M8 6.5h4M8 9.5h4M8 12.5h2.5"/>',
   finance:'<rect x="4" y="2.5" width="12" height="15" rx="2"/><path d="M7 5.5h6v3H7z"/><path d="M7.5 12h.01M10 12h.01M12.5 12h.01M7.5 14.5h.01M10 14.5h.01M12.5 14.5h.01"/>'
 };
+function syncBanner(){
+  const st = window.__store && window.__store.sync; if (!st) return "";
+  if (st.state==="off") return `<div class="banner">Синхронизация не настроена: изменения сохраняются только на этом устройстве. <button class="btn sm" data-act="sync-setup">Настроить синхронизацию</button></div>`;
+  if (st.state==="error") return `<div class="banner err">Синхронизация не удалась: ${esc(st.error)}. Изменения сохранены на этом устройстве и отправятся позже. <button class="btn sm" data-act="sync-now">Повторить</button> <button class="btn sm" data-act="sync-setup">Настройки</button></div>`;
+  return "";
+}
+function syncLine(){
+  const st = window.__store && window.__store.sync; if (!st) return "";
+  const t = st.at ? String(st.at.getHours()).padStart(2,"0")+":"+String(st.at.getMinutes()).padStart(2,"0") : "";
+  const label = st.state==="idle" ? `✓ синхронизировано${t?" "+t:""}` : st.state==="syncing" ? "отправка…" : st.state==="error" ? "⚠ ошибка" : "выключена";
+  return `<div>Синхронизация: <a href="#" data-act="${st.state==="off"||st.state==="error"?"sync-setup":"sync-now"}"><b>${label}</b></a></div>`;
+}
 function renderNav(){
   const r = route(), cur = r.startsWith("box-") ? "boxes" : r;
   const salesN = C.T.salesN;
@@ -553,7 +565,7 @@ function renderNav(){
     `<a href="#${id}" ${cur===id?'aria-current="page"':""}><svg class="ico" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${NAV_ICONS[id]}</svg><span class="lf">${l}</span><span class="ls">${short}</span>${typeof c==="string" && c.startsWith("<") ? c : `<span class="cnt">${c===""?"":n0(c)}</span>`}</a>`).join("");
   document.getElementById("railfoot").innerHTML =
     `<div>Курс: <b>${NF1.format(C.T.rate)} ₽ за €</b></div>` +
-    (window.__store && window.__store.mode ? `<div>Данные: <b>${window.__store.mode==="server"?"на сервере":"в этом браузере"}</b></div>` : "") +
+    syncLine() +
     (window.__store && window.__store.lock ? `<div><a href="#" data-act="lock">Выйти (заблокировать)</a></div>` : "") +
     (S.canWrite===false ? `<div>Режим просмотра</div>` : "");
 }
@@ -869,7 +881,7 @@ function viewFinance(){
     <form data-form="rate" class="toolbar" style="margin:0"><input type="number" step="0.01" min="1" id="rateIn" value="${esc(S.settings.rate||91)}" aria-label="Курс, рублей за евро" style="width:120px"><span class="muted">₽ за 1 €</span><button class="btn w" type="submit">Сохранить</button></form>
     ${S.settings.rateNote?`<div class="hintline" style="margin-top:8px">${esc(S.settings.rateNote)}</div>`:""}
     <div class="toolbar" style="margin:14px 0 0">${S.dl?`<span class="muted small">Скачать CSV:</span><button class="btn sm" data-act="csv" data-what="items">Товары</button><button class="btn sm" data-act="csv" data-what="sales">Продажи</button><button class="btn sm" data-act="csv" data-what="ledger">Журнал</button><button class="btn sm" data-act="csv" data-what="boxes">Посылки</button>`:""}</div>
-    ${window.__store?`<div class="toolbar" style="margin:10px 0 0"><span class="muted small">Резервная копия:</span><button class="btn sm" data-act="backup">Скачать JSON</button><label class="btn sm w" for="restoreIn">Загрузить из JSON</label><input type="file" id="restoreIn" accept=".json,application/json" hidden></div>`:""}
+    ${window.__store?`<div class="toolbar" style="margin:10px 0 0"><button class="btn sm" data-act="sync-setup">Синхронизация…</button><span class="muted small">Резервная копия:</span><button class="btn sm" data-act="backup">Скачать JSON</button><label class="btn sm w" for="restoreIn">Загрузить из JSON</label><input type="file" id="restoreIn" accept=".json,application/json" hidden></div>`:""}
     ${(S.settings.importNotes||[]).length?`<details class="notes" style="margin-top:12px"><summary>Заметки из Excel, которые не удалось разобрать автоматически</summary><ul>${S.settings.importNotes.map(n=>`<li>${esc(n)}</li>`).join("")}</ul></details>`:""}
   </section>`;
   return topbar("Бухгалтерия", "Итоги считаются автоматически из продаж, посылок и журнала операций.") +
@@ -1115,6 +1127,8 @@ document.addEventListener("click", async e => {
     case "led-del": confirmBox("Удалить операцию?", "Операция будет удалена из журнала без возможности восстановления.", "Удалить", async () => { await delDoc("ledger", d.id); toast("Операция удалена"); }); break;
     case "csv": exportCsv(d.what); break;
     case "lock": window.__store.lock(); break;
+    case "sync-setup": window.__store.syncSetup(); break;
+    case "sync-now": window.__store.syncNow(); break;
     case "backup": if (S.dl) S.dl.save({filename:`uchet-vintazha-${today()}.json`, data: JSON.stringify(window.__store.exportAll(), null, 1)}); break;
   }
 });
@@ -1166,6 +1180,7 @@ document.addEventListener("click", e => {
   tip.style.top = Math.max(8, r.top - tip.offsetHeight - 8) + "px";
   clearTimeout(tipT); tipT = setTimeout(() => tip.classList.remove("on"), 2600);
 });
+window.addEventListener("syncstatus", () => scheduleRender());
 window.addEventListener("hashchange", () => { closeModal(); render(); window.scrollTo(0,0); });
 
 render();
